@@ -1,0 +1,29 @@
+<?php
+/**
+ * Implementation of hook_views_query_alter
+ * @param type $view
+ * @param type $query 
+ */
+function comunita_tweaks_views_query_alter(&$view, &$query) {
+
+  if ($view->name == 'consultazioni') {
+    // Escludo dalla vista consultazioni tutte quelle che sono parte di un gruppo, che viene già a sua volta elencato
+    $gruppo_query = new EntityFieldQuery();
+    $gruppo_query->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', 'gruppo_di_consultazioni')
+        ->propertyCondition('status', NODE_PUBLISHED);
+    $result = $gruppo_query->execute();
+    
+    if(isset($result['node'])) {
+      $gruppo_nids = array_keys($result['node']);
+      $gruppo_children = array();
+      $gruppo_nodes = entity_load('node', $gruppo_nids);
+      foreach($gruppo_nodes as $gruppo) {
+        foreach($gruppo->field_consultazioni_incluse[LANGUAGE_NONE] as $inc) {
+          $gruppo_children[] = $inc['target_id'];
+        }
+      }
+      $query->add_where(1, 'node.nid', $gruppo_children, 'NOT IN');
+    }
+  }
+}

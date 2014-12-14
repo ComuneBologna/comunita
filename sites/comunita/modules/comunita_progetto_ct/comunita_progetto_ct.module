@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the Comunità Progetto CT feature.
+ */
+
+include_once 'comunita_progetto_ct.features.inc';

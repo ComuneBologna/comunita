@@ -1,0 +1,56 @@
+
+form#menu-editor-overview-form th {
+  white-space:nowrap;  /* we don't want linebreaks in the title cells */
+}
+
+form#menu-editor-overview-form td {
+  vertical-align:middle;
+}
+
+form#menu-editor-overview-form td.description {
+  width:3em;  /* shrink to smallest possible width */
+}
+form#menu-editor-overview-form td.checkbox {
+  width:1em;  /* shrink to smallest possible width */
+  white-space:nowrap;
+}
+
+form#menu-editor-overview-form td.title-edit .form-item,
+form#menu-editor-overview-form td.path-edit .form-item,
+form#menu-editor-overview-form td.description .form-item {
+  padding-right:4px;  /* compensate the 100% width */
+  position:relative;
+  zoom:1;  /* hasLayout hack for IE6, IE7 */
+}
+
+form#menu-editor-overview-form td.title-edit input,
+form#menu-editor-overview-form td.path-edit input,
+form#menu-editor-overview-form td.description input {
+  border-width:1px;
+  margin-top:0;
+  margin-bottom:0;
+  width:100%;
+}
+
+form#menu-editor-overview-form td.description textarea {
+  border-width:1px;
+  margin-top:0;
+  margin-bottom:0;
+  width:100%;
+  height:1em;
+  resize:none;  /* prevent chrome and safari textarea resizing */
+}
+
+form#menu-editor-overview-form .focus-description-column td.description {
+  width:250px;
+}
+
+form#menu-editor-overview-form .focus-description-column tr.focus td.description div.form-item {
+  height:auto !important;
+  zoom:1;  /* hasLayout hack for IE6, IE7 */
+}
+
+form#menu-editor-overview-form .focus-description-column tr.focus td.description textarea {
+  height:60px !important;
+}
+

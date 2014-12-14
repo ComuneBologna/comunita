@@ -1,0 +1,15 @@
+name = Comunità Tassonomie
+core = 7.x
+package = Comunita
+version = 7.x-0.51
+project = comunita_tassonomia
+dependencies[] = features
+dependencies[] = taxonomy
+features[features_api][] = api:2
+features[taxonomy][] = capacita
+features[taxonomy][] = materiali
+features[taxonomy][] = soggetti
+features[taxonomy][] = spazi
+features[taxonomy][] = strumenti_def
+features[taxonomy][] = tipologia_progetti
+mtime = 1415819392

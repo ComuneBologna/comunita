@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the Comunità Flags feature.
+ */
+
+include_once 'comunita_flags.features.inc';

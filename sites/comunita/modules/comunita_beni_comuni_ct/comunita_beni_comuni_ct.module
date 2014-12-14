@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the Comunità Beni Comuni CT feature.
+ */
+
+include_once 'comunita_beni_comuni_ct.features.inc';

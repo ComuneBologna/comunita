@@ -1,0 +1,128 @@
+<?php
+/**
+ * @file
+ * Crea le mappe Leaflet per sito Comunità
+ *
+ **/
+
+/**
+ * Implements hook_block_info().
+ */
+function comunita_leaflet_map_block_info() {
+  $blocks['mappa_homepage'] = array(
+    'info' => t('Mappa Homepage'),
+    'cache' => DRUPAL_NO_CACHE
+  );
+
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function comunita_leaflet_map_block_view($delta = '') {
+  $block = array();
+
+  switch ($delta) {
+
+    case 'mappa_homepage':
+      $block['subject'] = '';
+      $block['content'] = comunita_leaflet_map_homepage_block();
+      break;
+  }
+  return $block;
+}
+
+/*
+ * Contenuto blocco
+ */
+function comunita_leaflet_map_homepage_block() {
+  drupal_add_css(drupal_get_path('module', 'comunita_leaflet_map') . '/awesome_markers/leaflet.awesome-markers.css');
+  drupal_add_css(drupal_get_path('module', 'comunita_leaflet_map') . '/comunita_leaflet_map.css');
+  drupal_add_js(drupal_get_path('module', 'comunita_leaflet_map') . '/awesome_markers/leaflet.awesome-markers.js');
+  drupal_add_js(drupal_get_path('module', 'comunita_leaflet_map') . '/comunita_leaflet_map.drupal.js', array('weight' => 99));
+  
+  $map = array(
+      'label' => 'Iperbole Comunità',
+      'description' => t('Comunita homepage map'),
+      'center' => array('lat' => '44.494887', 'lon' => '11.342616'),
+      'settings' => array(
+        'dragging' => TRUE,
+        'touchZoom' => TRUE,
+        'scrollWheelZoom' => FALSE,
+        'doubleClickZoom' => TRUE,
+        'zoomControl' => TRUE,
+        'attributionControl' => TRUE,
+        'trackResize' => TRUE,
+        'fadeAnimation' => TRUE,
+        'zoomAnimation' => TRUE,
+        'closePopupOnClick' => TRUE,
+        'layerControl' => FALSE,
+        'zoom' => 11,
+      ),
+      'layers' => array(
+        'earth' => array(
+          'urlTemplate' => 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+          'options' => array(
+            'attribution' => '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+          ),
+        ),
+      ),
+  );
+  
+  $features = array();
+  $map_filters = drupal_get_query_parameters();
+  if(isset($map_filters['map_filter']))
+    $geoJSON = views_get_view_result('mappa_homepage', 'page', $map_filters['map_filter']);
+  else
+    $geoJSON = views_get_view_result('mappa_homepage', 'page');
+  foreach ($geoJSON as $JSONdata) {
+    if(isset($JSONdata->field_field_geo[0])) {
+      $features[] = array(
+        'type' => 'point',
+        'lat' => $JSONdata->field_field_geo[0]['raw']['lat'],
+        'lon' => $JSONdata->field_field_geo[0]['raw']['lon'],
+        'leaflet_id' => 'leaflet_object_' . $JSONdata->nid,
+        'awesomemarkers' => _get_awesome_marker($JSONdata->node_type),
+        'popup' => l($JSONdata->node_title, 'node/' . $JSONdata->nid),
+      );
+    }
+  }
+  
+  $output = '<div class="comunita_map">';
+  $output .= '<div class="map_filters_container">';
+  $output .= '<form id="map_filters" action="">
+                <fieldset>
+                <legend>Visualizza:</legend>
+                  <div><input type="radio" value="progetto" name="map_filter" id="filter_prog" ' . (($map_filters['map_filter'] == 'progetto') ? 'checked' : '') . '/> <label for="filter_prog">Progetti</label></div>
+                  <div><input type="radio" value="organizzazione" name="map_filter" id="filter_org" ' . (($map_filters['map_filter'] == 'organizzazione') ? 'checked' : '') . ' /> <label for="filter_org">Organizzazioni</label></div>
+                  <div><input type="radio" value="bene_comune" name="map_filter" id="filter_bene" ' . (($map_filters['map_filter'] == 'bene_cou') ? 'checked' : '') . ' /> <label for="filter_bene">Beni Comuni</label></div>
+                </fieldset>
+                <input type="submit" value="Applica" />
+                </form></div>';
+  $output .= leaflet_render_map($map, $features);
+  $output .= '</div>';
+  
+  return $output;
+}
+
+function _get_awesome_marker($node_type) {
+  if($node_type == 'organizzazione') {
+    return array(
+          'icon' => 'glyphicon glyphicon-home',
+          'markerColor' => 'cadetblue'
+        );
+  }
+  else if($node_type == 'progetto') {
+    return array(
+          'icon' => 'glyphicon glyphicon-asterisk',
+          'markerColor' => 'blue'
+        );
+  }
+  else if($node_type == 'bene_comune') {
+    return array(
+          'icon' => 'glyphicon glyphicon-flag',
+          'markerColor' => 'green'
+        );
+  }
+}

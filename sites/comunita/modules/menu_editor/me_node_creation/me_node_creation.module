@@ -1,0 +1,197 @@
+<?php
+
+
+/**
+ * Implements hook_permission()
+ */
+function me_node_creation_permission() {
+  return array(
+    'see menu_editor placeholder pages' => array(
+      'title' => t('See menu_editor placeholder pages'),
+    ),
+  );
+}
+
+
+/**
+ * Implements hook_menu()
+ */
+function me_node_creation_menu() {
+  $items = array();
+  $items['node/add/%node_type/mlid/%menu_editor_menu_link'] = array(
+    'load arguments' => array(2, 4),
+    'title' => 'Create a node',
+    'page callback' => 'me_node_creation_create_node',
+    'page arguments' => array(2, 4),
+    'file' => 'me_node_creation.create.inc',
+    'access callback' => 'me_node_creation_create_node_access',
+    'access arguments' => array(2),
+  );
+  $items['mlid/%menu_editor_menu_link/under-construction'] = array(
+    'title' => 'Under Construction',
+    'title callback' => 'menu_editor_placeholder_title',
+    'title arguments' => array(1),
+    'page callback' => 'menu_editor_placeholder_page',
+    'page arguments' => array(1),
+    'file' => 'me_node_creation.placeholder.inc',
+    'access arguments' => array('see menu_editor placeholder pages'),
+    'weight' => 0,
+  );
+  return $items;
+}
+
+
+/**
+ * Implements hook_form_alter()
+ */
+function me_node_creation_form_alter(&$form, &$form_state, $form_id) {
+  if (empty($form['#node_edit_form']) || empty($form['#node'])) {
+    return;
+  }
+  $node = $form['#node'];
+  if (empty($node->me_node_creation_menu_item)) {
+    return;
+  }
+  module_load_include('create.inc', 'me_node_creation');
+  return _me_node_creation_form_alter($form, $node);
+}
+
+
+/**
+ * Implements hook_node_insert()
+ */
+function me_node_creation_node_insert($node) {
+  $menu_item = @$node->me_node_creation_menu_item;
+  if (!$menu_item) {
+    return;
+  }
+  $mlid = $menu_item['mlid'];
+  $nid = $node->nid;
+  switch ($menu_item['link_path']) {
+    case "node/add/$node->type/mlid/$mlid":
+    case "mlid/$mlid/under-construction":
+      $menu_item['link_path'] = "node/$nid";
+      $menu_item['router_path'] = "node/%";
+      $menu_item['options'] = array();
+      menu_link_save($menu_item);
+  }
+}
+
+
+/**
+ * Implements hook_crumbs_plugins()
+ */
+function me_node_creation_crumbs_plugins($api) {
+  $api->monoPlugin();
+}
+
+
+// Wildcard loaders
+// -----------------------------------------------------------------------------
+
+
+/**
+ * Wildcard loader for %menu_editor_menu_link
+ * This is similar to menu_link_load(), but we do some loop prevention.
+ *
+ * TODO: Test if the by-reference does not explode in some edge cases.
+ */
+function menu_editor_menu_link_load($mlid) {
+  static $_cache = array();
+  if (is_numeric($mlid) && $mlid) {
+    if (isset($_cache[$mlid])) {
+      return $_cache[$mlid];
+    }
+    $query = db_select('menu_links', 'ml');
+    $query->leftJoin('menu_router', 'm', 'm.path = ml.router_path');
+    $query->fields('ml');
+    // Weight should be taken from {menu_links}, not {menu_router}.
+    $query->addField('ml', 'weight', 'link_weight');
+    $query->fields('m');
+    $query->condition('ml.mlid', $mlid);
+    if ($item = $query->execute()->fetchAssoc()) {
+      $_cache[$mlid] =& $item;
+      $item['weight'] = $item['link_weight'];
+      $item['load_functions'] = unserialize($item['load_functions']);
+      _menu_link_translate($item);
+      return $item;
+    }
+  }
+  return FALSE;
+}
+
+
+// Title callbacks
+// -----------------------------------------------------------------------------
+
+
+/**
+ * Title callback for mlid/%menu_link/under-construction
+ * 
+ * @param array $item
+ *   The menu link, as returned by menu_link_load()
+ * @return string
+ *   The title, to be used in tabs, breadcrumbs and menus
+ */
+function menu_editor_placeholder_title($item) {
+  // _menu_link_translate($item);
+  return $item['link_title'];
+}
+
+
+/**
+ * Title for menu links or tabs.
+ * The page title can be different!
+ * 
+ * @param $type_arg
+ * @param $item
+ */
+function me_node_creation_title($type_arg, $item) {
+  foreach (node_type_get_types() as $type_name => $type_object) {
+    if ($type_name == $type_arg) {
+      return "New $type_object->name";
+    }
+  }
+  return $type->name;
+}
+
+
+// Access callbacks
+// -----------------------------------------------------------------------------
+
+
+/**
+ * Access callback for node/add/%node_type/mlid/%menu_editor_mlid
+ */
+function me_node_creation_create_node_access($type) {
+  if (!is_object($type)) {
+    ddebug_backtrace();
+    return FALSE;
+  }
+  return node_access('create', $type->type);
+}
+
+
+// Utility
+// -----------------------------------------------------------------------------
+
+
+/**
+ * @return array
+ *   Array of placeholders
+ */
+function me_node_creation_menu_editor_placeholders() {
+  $placeholders = array(
+    '<new>' => 'mlid/@mlid/under-construction',
+    '<new page>' => NULL
+  );
+  foreach (node_type_get_types() as $type_name => $type_info) {
+    $placeholders["<new $type_name>"] = "node/add/$type_name/mlid/@mlid";
+  }
+  // we want that <new page> is first, if this content type exists.
+  // if not, we remove this placeholder.
+  if (!isset($placeholders['<new page>'])) {
+    unset($placeholders['<new page>']);
+  }
+  return $placeholders;
+}

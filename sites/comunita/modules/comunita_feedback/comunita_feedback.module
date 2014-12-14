@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the Comunita Feedback feature.
+ */
+
+include_once 'comunita_feedback.features.inc';

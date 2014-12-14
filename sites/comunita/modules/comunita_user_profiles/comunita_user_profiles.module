@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the Comunità User Profiles feature.
+ */
+
+include_once 'comunita_user_profiles.features.inc';

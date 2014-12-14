@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the Comunità Segnalazioni feature.
+ */
+
+include_once 'comunita_segnalazioni.features.inc';

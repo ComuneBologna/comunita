@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the Comunità Patto di collaborazione feature.
+ */
+
+include_once 'comunita_patto_di_collaborazione.features.inc';

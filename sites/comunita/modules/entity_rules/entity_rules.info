@@ -1,0 +1,12 @@
+name = Entity Rules
+description = Provides UI for select Rules to execute during Entity Events
+core = 7.x
+dependencies[] = entity
+dependencies[] = rules
+
+; Information added by Drupal.org packaging script on 2013-12-10
+version = "7.x-1.0-alpha4"
+core = "7.x"
+project = "entity_rules"
+datestamp = "1386645215"
+

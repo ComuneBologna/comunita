@@ -1,0 +1,210 @@
+<?php
+/**
+ * @file
+ * Modulo di utilità per i progetti
+ *
+ **/
+
+/**
+ *  Implements hook_form_alter().
+ */
+function comunita_progetti_form_node_form_alter(&$form, &$form_state) {
+  global $user;
+  if($form['#node']->type === 'progetto' ) {
+    $form['group_access']['#type'] = 'hidden';
+    if(count(array_intersect(array('redazione', 'administrator'), array_values($user->roles))) < 1) {
+      // Nascondo i campi di stato documento e progetto
+      $form['field_stato_documento']['#type'] = 'hidden';
+      if(empty($form['field_stato_documento']['und']['#default_value'])) {
+        $form['field_stato_documento']['und']['#default_value'] = array(0);
+      }
+      $form['field_stato']['#type'] = 'hidden';
+      $form['field_stato']['und']['#default_value'] = 9;
+      if($form['field_stato_documento']['und']['#default_value'][0] == 0 ) {
+        $form['actions']['submit']['#value'] = t('Salva in bozza');
+        // il progetto è "bozza"
+        $form['actions']['invia'] = array(
+          '#type' => 'submit',
+          '#value' => t('Invia'),
+          '#weight' => -10,
+          '#validate' => array('node_form_validate', 'comunita_progetti_node_form_validate_custom'),
+          '#submit' => array('node_form_submit'),
+          '#attributes' => array('class' => array('btn btn-primary form-submit')),
+        );
+      }
+      if($form['field_stato_documento']['und']['#default_value'][0] == 1 ) {
+        // il progetto è "inviato"
+        $form['actions']['pubblica'] = array(
+          '#type' => 'submit',
+          '#value' => t('Pubblica'),
+          '#weight' => -10,
+          '#validate' => array('node_form_validate', 'comunita_progetti_node_form_validate_custom'),
+          '#submit' => array('node_form_submit'),
+          '#attributes' => array('class' => array('btn btn-primary form-submit')),
+        );
+      }
+    }
+  }
+}
+
+/**
+ * Implements invia form submit
+ */
+function comunita_progetti_node_form_validate_custom($form, &$form_state) {
+  // Qui settiamo lo stato del documento dopo la pressione di "invia"
+  if($form_state['values']['field_stato_documento'][LANGUAGE_NONE][0]['value'] == 1) {
+    // lo stato attuale del progetto è "inviato", permetto la pubblicazione
+    $stato_documento['#parents'] = array('field_stato_documento');
+    form_set_value($stato_documento, array(LANGUAGE_NONE => array(array('value' => array(2)))), $form_state);
+  }
+  else {
+    $stato_documento['#parents'] = array('field_stato_documento');
+    form_set_value($stato_documento, array(LANGUAGE_NONE => array(array('value' => array(1)))), $form_state);
+  }
+}
+
+/**
+ * Insert the given field into a particular position in the form.
+ * 
+ * @param $form
+ *   The form which is going to have the field inserted. Passed by reference.
+ * @param string $file_key
+ *   The key in the form where the field is to be found. e.g. if $form['foo']
+ *   contains the field, then use 'foo' as this parameter.
+ * @param int $insert_index
+ *   Index of where in the form the field should be placed.
+ */
+function _views_tweaks_insert_field(&$form, $field_key, $insert_index) {
+  // this value determines the position of the new element.
+  $element_to_insert = array();
+  $element_to_insert[$field_key] = array(
+      'value' => $field_key,
+  );
+
+  $form_info_top = array_slice($form['#info'], 0, $insert_index);
+  $form_info_bottom = array_slice($form['#info'], $insert_index);
+  $new_form_info = $form_info_top + $element_to_insert + $form_info_bottom;
+  $form['#info'] = $new_form_info;
+}
+
+/**
+ *  Implements hook_form_alter().
+ */
+function comunita_progetti_form_alter(&$form, &$form_state, $form_id) {
+  // Bruttissimo redirect per pulire i checkbox del supporto che nel paginatore se vuoti vengono settati a 0
+  $get = drupal_get_query_parameters();
+  if(isset($get['supporto'])) {
+    if($get['supporto']['capacita'] != 'capacita' && $get['supporto']['strumenti'] != 'strumenti' && $get['supporto']['materiali'] != 'materiali' && $get['supporto']['spazi'] != 'spazi') {
+      unset($get['supporto']);
+      drupal_goto(progetti, array('query' => $get));
+    }
+  }
+  if($form_id == 'views_exposed_form') {
+    if(arg(0) == 'progetti') {
+      $form['supporto'] = array(
+        '#title' => t('Progetti in cerca di supporto'),
+        '#type' => 'checkboxes',
+        '#options' => array(
+          'capacita' => t('Capacità'),
+          'strumenti' => t('Strumenti'),
+          'materiali' => t('Materiali'),
+          'spazi' => t('Spazi')
+        ),
+      );
+      
+      _views_tweaks_insert_field($form, 'supporto', 1);
+    }
+  }
+}
+
+/*
+ * Implements hook_views_query_alter
+ */
+function comunita_progetti_views_query_alter(&$view, &$query) {
+  // Aggiungo i filtri per progetti in cerca di supporto
+  if ($view->name === 'progetti') {
+    $get = drupal_get_query_parameters();
+    if(isset($get['supporto'])) {
+      if(isset($get['supporto']['capacita'])) {
+        $query->where[1]['conditions'][] = array(
+          'field' => 'field_data_field_supporto_capacita.field_supporto_capacita_tid',
+          'value' => NULL,
+          'operator' => 'IS NOT NULL',
+        );
+      }
+      if(isset($get['supporto']['strumenti'])) {
+        $query->where[1]['conditions'][] = array(
+          'field' => 'field_data_field_supporto_strumenti.field_supporto_strumenti_tid',
+          'value' => NULL,
+          'operator' => 'IS NOT NULL',
+        );
+      }
+      if(isset($get['supporto']['materiali'])) {
+        $query->where[1]['conditions'][] = array(
+          'field' => 'field_data_field_supporto_materiali.field_supporto_materiali_tid',
+          'value' => NULL,
+          'operator' => 'IS NOT NULL',
+        );
+      }
+      if(isset($get['supporto']['spazi'])) {
+        $query->where[1]['conditions'][] = array(
+          'field' => 'field_data_field_supporto_spazi.field_supporto_spazi_tid',
+          'value' => NULL,
+          'operator' => 'IS NOT NULL',
+        );
+      }
+    }
+  }
+}
+
+
+define('CP_REALM', 'comunita_progetti');
+/**
+ * Implements hook_node_access_records().
+ */
+function comunita_progetti_node_access_records($node) {
+  $grants = array();
+  if ($node->type == "progetto") {
+    $grants[] = array(
+      'realm' => CP_REALM,
+      'gid' => $node->nid,
+      'grant_view' => 1,
+      'grant_update' => 0,
+      'grant_delete' => 0,
+      'priority' => 1,
+    );
+  }
+  return $grants;
+}
+
+/**
+ * Implements hook_node_grants().
+ */
+function comunita_progetti_node_grants($account, $op) {
+  $grants = array();
+  if($op == 'view') {
+    $grants = array();
+    $grants[CP_REALM] = array();
+    
+    $progetti = node_load_multiple(array(), array('type' => 'progetto'));
+    foreach ($progetti as $prog) {
+      if($prog->field_stato_documento[LANGUAGE_NONE][0]['value'] >= 1) {
+        $grants[CP_REALM][] = $prog->nid;
+      }
+      else if(count(array_intersect(array('redazione', 'administrator'), array_values($account->roles))) >= 1) {
+        $grants[CP_REALM][] = $prog->nid;
+      }
+      else if($prog->uid == $account->uid) {
+        $grants[CP_REALM][] = $prog->nid;
+      }
+    }
+  }
+  return $grants;
+}
+
+/**
+ * Entity uri callback for taxonomy terms.
+ */
+function comunita_progetti_taxonomy_term_uri($term) {
+  return l('#' . $term->name, 'progetti', array('query' => array('field_tag_categorie_tid' => $term->tid)));
+}

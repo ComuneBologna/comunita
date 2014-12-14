@@ -1,0 +1,119 @@
+<?php
+/**
+ * @file
+ * Modulo che implementa blocchi custom per il sito Comunità
+ *
+ **/
+
+/**
+ * Implements hook_block_info().
+ */
+function comunita_blocchi_block_info() {
+  $blocks['profili_org'] = array(
+    'info' => t('Elenco profili/organizzazioni'),
+    'cache' => DRUPAL_NO_CACHE
+  );
+  $blocks['intro'] = array(
+    'info' => t('Intestazione Homepage'),
+    'cache' => DRUPAL_CACHE_GLOBAL
+  );
+
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function comunita_blocchi_block_view($delta = '') {
+  $block = array();
+
+  switch ($delta) {
+    case 'profili_org':
+      $block['subject'] = '';
+      $block['content'] = comunita_blocchi_profili_org();
+      break;
+    case 'intro':
+      $block['subject'] = '';
+      $block['content'] = comunita_blocchi_intro();
+      break;
+  }
+  return $block;
+}
+
+/*
+ * Implements hook_theme()
+ */
+function comunita_blocchi_theme($existing, $type, $theme, $path) {
+  return array(
+    'comunita_blocchi_intro_home' => array(
+      'variables' => array(),
+      'path' => drupal_get_path('module', 'comunita_blocchi') . '/theme',
+      'template' => 'intro-home'
+    ),
+  );
+} 
+
+/*
+ * Elenco profili e organizzazioni
+ */
+function comunita_blocchi_profili_org() {
+  $output = '';
+  
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', 'user')
+      ->propertyCondition('uid', '1', '>');
+  $user_res = $query->execute();
+  
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', 'node')
+      ->propertyCondition('status', 1)
+      ->propertyCondition('type', 'organizzazione');
+  $orgs_res = $query->execute();
+  
+  $users = user_load_multiple(array_keys($user_res['user']));
+  $orgs = entity_load('node', array_keys($orgs_res['node']));
+  
+  $users_view = entity_view('user', $users, 'elenco_profili');
+  $orgs_view = entity_view('node', $orgs, 'elenco_profili');
+  $output .= drupal_render($users_view);
+  $output .= drupal_render($orgs_view);
+  
+  return $output;
+}
+
+/*
+ * Nuovo display per gli utenti e le organizzazioni per il blocco elenco profili/organizzazioni
+ */
+function comunita_blocchi_entity_info_alter(&$entity_info) {
+  $entity_info['user']['view modes']['elenco_profili'] = array(
+    'label' => t('Elenco Profili/Organizzazioni'),
+    'custom settings' => true
+  );
+  
+  $entity_info['node']['view modes']['elenco_profili'] = array(
+    'label' => t('Elenco Profili/Organizzazioni'),
+    'custom settings' => true
+  );
+}
+
+/*
+ * Template suggestion per il nuovo display elenco profili
+ */
+function comunita_blocchi_preprocess_node(&$vars) {
+  if($vars['view_mode'] == 'elenco_profili') {
+    $vars['theme_hook_suggestions'][] = 'node__' . $vars['type'] . '__elenco_profili';
+  }
+}
+
+function comunita_blocchi_preprocess_user_profile(&$vars) {
+  if($vars['elements']['#view_mode'] == 'elenco_profili') {
+    $vars['theme_hook_suggestions'][] = 'user_profile__elenco_profili';
+  }
+}
+
+/*
+ * Blocco intro homepage
+ */
+function comunita_blocchi_intro() {
+  return theme('comunita_blocchi_intro_home', array());
+}

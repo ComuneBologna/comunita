@@ -1,0 +1,17 @@
+name = Masonry Views
+description = "Provides a Views plugin for displaying content in a Masonry layout."
+core = 7.x
+package = Masonry
+
+files[] = views_plugin_style_masonry_views.inc
+
+dependencies[] = masonry (>=2.x)
+dependencies[] = views
+
+
+; Information added by drupal.org packaging script on 2013-06-16
+version = "7.x-1.0"
+core = "7.x"
+project = "masonry_views"
+datestamp = "1371359451"
+

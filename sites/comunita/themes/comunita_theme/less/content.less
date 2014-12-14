@@ -1,0 +1,1654 @@
+.main-container {
+  padding-top: 15px;
+  background-color: @gray-light;
+}
+
+.footer {
+  border-top: 0 none;
+  margin-top: 0;
+  padding-bottom: 0;
+  padding-top: 10px;
+}
+
+.container img {
+    max-width: 100%;
+    height: auto;
+}
+
+a.tabledrag-handle .handle {
+  padding: 0.42em 1em;
+}
+
+.breadcrumb {
+    background: none repeat scroll 0 0 #fff;
+    border: 0 none;
+    border-radius: 0;
+    font-size: 0.875em;
+    font-weight: 300;
+    margin-bottom: 15px;
+    text-transform: none;
+}
+
+.breadcrumb > li + li:before {
+    color: @gray-text-light;
+    content: "/ ";
+    padding: 0 4px;
+}
+
+.panel {
+  font-family: @font-family-sans-serif;
+  
+  h2, h1 {
+    color: @gray-dark;
+    border-bottom: 1px solid #dadada;
+//    color: #049ce7;
+    font-size: 2em;
+    margin-bottom: 15px;
+    margin-top: 0;
+    padding-bottom: 10px;
+    
+    img {
+      margin-right: 10px;
+    }
+  }
+  
+  h2 {
+    color: @gray-dark;
+  }
+  
+  h3 {
+    margin-top: 0;
+    font-size: 1.2em;
+    color: @gray-dark;
+  }
+  
+  h4 {
+    font-size: 1em;
+  }
+  
+  .scopri {
+    background-color: @brand-primary;
+    box-shadow: 1px 1px 0px rgba(0, 0, 0, 0.4);
+    color: #fff;
+    display: inline-block;
+    font-weight: 500;
+    margin: 40px 0 10px;
+    padding: 5px 15px;
+    text-decoration: none;
+    text-transform: uppercase;
+  }
+  
+  .scopri-destra {
+    float: right;
+    margin-top: 0;
+  }
+}
+
+.not-front .scopri {
+  background-color: transparent;
+  box-shadow: none;
+  color: @brand-primary;
+  font-weight: 700;
+  font-size: 1.2em;
+  margin: 15px 0;
+  padding: 0;
+  text-transform: none;
+}
+
+.not-front .scopri:hover {
+  text-decoration: underline;
+}
+
+.not-front .scopri-tipico {
+  margin-bottom: 0; 
+}
+
+.front .panel-odd .scopri {
+  background-color: @iperbole-blue-secondary;
+}
+
+.not-front .panel-odd .scopri {
+  color: @iperbole-blue-secondary;
+}
+
+.panel-title-small {
+  h1, h2 {
+    font-size: 1.2em;
+    font-weight: 700;
+  }
+}
+
+.region-content {
+  background-color: #fff;
+}
+
+.front .region-content,
+.page-progetti .region-content,
+.page-beni-comuni .region-content,
+.page-consultazioni .region-content,
+.page-profili .region-content,
+.page-organizzazioni .region-content,
+.page-node-11 .region-content,
+.page-node-21 .region-content,
+.page-node-32 .region-content,
+.page-node-75 .region-content,
+.node-type-progetto .region-content,
+.node-type-organizzazione .region-content,
+.node-type-page .region-content,
+.page-user .region-content,
+.node-type-article .region-content,
+.node-type-bene-comune .region-content,
+.node-type-consultazione .region-content,
+.node-type-proposta .region-content,
+.node-type-patto-di-collaborazione .region-content,
+.node-type-gruppo-di-consultazioni .region-content,
+.page-taxonomy .region-content {
+  background-color: transparent;
+}
+
+.page-user-edit .region-content,
+.page-node-edit .region-content{
+  background-color: #fff;
+}
+
+.panel-info {
+  h1, h2, h3 {
+    color: #fff;
+  }
+  
+  .scopri {
+    color: @brand-primary;
+    background-color: #fff;
+  }
+}
+
+.panel-body {
+  padding: 0 20px 15px;
+  word-wrap: break-word;
+}
+
+.panel-notitle {
+  padding-top: 15px;
+  padding-bottom: 15px;
+}
+
+.front {
+  .region-content {
+    margin-bottom: 20px;
+  }
+}
+
+li.flag-segui, li.flag-segui_utente {
+  display: block;
+  margin-left: 5px;
+  margin-bottom: 20px;
+  width: 100%;
+  
+  a.flag {
+    background-color: @brand-primary;
+    border-radius: 3px;
+    color: #fff;
+    display: block;
+    font-size: 1em;
+    font-weight: 700;
+    padding: 5px;
+    text-align: center;
+    text-transform: uppercase;
+    width: 100%;
+  }
+  
+  span.flag-throbber {
+    left: -20px;
+    position: absolute;
+    top: 20px;
+  }
+  
+  span.flag-message {
+    
+  }
+}
+
+.profile-title h1 {
+  color: @gray-dark;
+  font-size: 1.6em;
+  font-weight: 700;
+  margin: 0 0 10px 0;
+}
+
+.user-mail {
+}
+
+.profile-label {
+  color: @brand-primary;
+  margin-top: 15px;
+}
+
+.news-item {
+  border-bottom: 1px solid #dadada;
+  padding-bottom: 15px;
+  margin-bottom: 15px;
+  overflow: hidden;
+  
+  header h2 {
+    margin-top: 0;
+    
+    a {
+      color: @gray-dark;
+      font-family: @font-family-sans-serif;
+      font-size: 0.8em;
+    }
+  }
+  
+  .field-name-field-image {
+    margin: 0 0 10px;
+  }
+}
+
+.field-name-field-org-picture, .field-name-field-immagine-progetto, .user-picture {
+  img {
+    margin-bottom: 5px;
+    width: 100%;
+  }
+}
+
+.col-pictures {
+  border-right: 1px solid #dadada;
+}
+
+.field-name-group-group a {
+  color: @gray-dark;
+  font-size: 0.8em;
+  text-decoration: underline;
+}
+
+.field-name-group-group a:before {
+  content: "[";
+}
+
+.field-name-group-group a:after {
+  content: "]";
+}
+
+.field-name-group-group a:hover {
+  color: @gray-light;
+}
+
+.group .from {
+  float: left;
+  margin-right: 0.2em;
+  text-transform: lowercase;
+}
+
+a.title,
+.view-content a.username {
+  color: @gray-dark;
+  font-size: 1em;
+  font-weight: 700;
+  line-height: 0.875em;
+}
+
+.views-page {
+  .text-center {
+    clear: both;
+  }
+}
+
+.pagination {
+  margin: 50px 0 0;
+}
+
+.pagination > li > a,
+.pagination > li:first-child > a,
+.pagination > li:last-child > a,
+.pagination > li > span,
+.pagination > li:first-child > span,
+.pagination > li:last-child > span {
+  border-radius: 0;
+}
+
+.pagination > li > a,
+.pagination > li > span {
+  color: @gray;
+  padding: 4px 8px;
+}
+
+.view-post-recenti-su-organizzazione .field-name-og-group-ref {
+  margin-bottom: 10px;
+  margin-top: -10px;
+}
+
+.elenco-item {
+  float: left;
+  line-height: 1.2em;
+  padding: 0 10px 10px;
+  width: 130px;
+  
+  .group {
+    font-size: 0.875em;
+    line-height: 1.2em;
+    margin-top: 2px;
+  }
+}
+
+.page-node-add, .page-user-edit, .page-node-edit {
+  
+  .form-control {
+    height: auto;
+  }
+  
+  .radio input[type="radio"], .radio-inline input[type="radio"], .checkbox input[type="checkbox"], .checkbox-inline input[type="checkbox"] {
+    margin-left: 0;
+  }
+  
+  .field-name-field-org-picture img, .field-name-field-immagine-progetto img, .user-picture img {
+    margin-bottom: 5px;
+    width: auto;
+  }
+  
+  .input-group-btn {
+    font-size: 1em;
+    
+    .btn {
+      background-color: @brand-primary;
+      color: #fff;
+      margin-left: 5px;
+    }
+  }
+}
+
+#user-profile-form, .node-form {
+  margin: 5px;
+}
+
+ul.tabs--primary {
+  margin: 0 0 10px;
+  
+  li a {
+    background-color: #fff;
+    color: @brand-primary;
+    padding: 5px 10px;
+  }
+  
+  li a.active {
+    background-color: @brand-primary;
+    color: #fff;
+  }
+}
+
+.profile-edit {
+  color: @gray;
+  font-size: 0.8em;
+  position: absolute;
+  right: 5px;
+  top: -5px;
+}
+
+.action-links {
+  overflow: hidden;
+  border-bottom: 1px solid #dadada;
+  margin-bottom: 15px;
+  
+  a {
+    display: block;
+    background-color: @brand-primary;
+    border-radius: 4px;
+    color: #fff;
+    float: left;
+    font-size: 1em;
+    margin: 10px 0;
+    padding: 5px 15px;
+    text-transform: uppercase;
+  }
+}
+
+.panel-blog .action-links {
+  border-bottom: 0 none;
+  margin-bottom: 0;
+}
+
+ul.tabs--secondary.pagination {
+  margin-top: 10px;
+  margin-left: 15px;
+
+  li > a, li > span {
+    color: #666;
+    font-size: 1.2em;
+  }
+  
+  li.active > a, li.active > span,
+  li > a:hover, li > span:hover {
+    color: #fff;
+  }
+}
+
+.action-links-org a {
+  display: block;
+  background-color: @brand-primary;
+  border-radius: 4px;
+  color: #fff;
+  float: left;
+  font-size: 0.9em;
+  margin: 10px 6px 0 0;
+  padding: 5px 5px;
+}
+
+#edit-picture {
+  img {
+    width: auto;
+  }
+}
+
+.panel {
+    border-color: @brand-primary;
+    border-image: none;
+    border-right: 0 none;
+    border-style: solid none none;
+    border-width: 8px 0 0;
+}
+
+.panel-odd {
+  border-color: @iperbole-blue-secondary;
+}
+
+.panel-info {
+  border-color: #fff;
+  background-color: @brand-primary;
+}
+
+.panel-info-secondary {
+  border-color: @iperbole-blue-secondary;
+  background-color: @iperbole-blue-secondary;
+  
+  h2 {
+    color: #fff;
+  }
+  
+  .scopri {
+    background-color: #fff;
+    color: @iperbole-blue-secondary;
+  }
+  
+  a {
+    color: #fff;
+  }
+}
+
+.panel-heading {
+    border: 0 none !important;
+    padding: 15px 20px 0;
+    position: relative;
+}
+
+.panel-info > .panel-heading {
+  background: @brand-primary;
+  color: #fff;
+}
+
+.panel-title {
+    padding-bottom: 5px;
+}
+
+.panel-account .panel-title {
+    color: #fff;
+}
+
+.panel-secondary .panel-title {
+    color: #b71c1c;
+}
+
+.panel-account {
+    background: none repeat scroll 0 0 #f44336;
+    border-top: 10px solid #fff;
+    color: #fff;
+}
+
+.panel-secondary {
+    border-top: 10px solid #b71c1c;
+}
+
+.panel-account a {
+    color: #fff;
+}
+
+.btn-primary {
+    background-color: #f44336;
+    text-transform: uppercase;
+}
+
+.btn {
+    border: 0 none;
+//    box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.2);
+     box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.4);
+    font-size: 0.875em;
+    padding: 3px 10px;
+}
+
+.panel-account .btn-primary {
+    background-color: #b71c1c;
+}
+
+.panel-footer,
+.row-border {
+    background-color: #fff;
+    border-top: 1px solid #dadada;
+    padding: 15px;
+    overflow: hidden;
+}
+
+.panel-footer ul {
+    padding-left: 10px;
+}
+
+.panel-footer ul li {
+    list-style: none;
+}
+
+.panel-footer ul li a {
+    text-decoration: underline;
+}
+
+.profile-info {
+    overflow: hidden;
+}
+
+.panel-2-col {
+  
+  .view-header, .views-body {
+    @media (min-width: @screen-xs) {
+      width: 50%;
+      float: left;
+    }
+    
+    padding: 0;
+  }
+  
+  .view-header {
+    padding: 15px 20px;
+  }
+  
+  .panel-heading {
+    padding: 0;
+  }
+}
+
+.home-progetti,
+.home-beni,
+.home-profili {
+  .views-field-nothing {
+    background: none repeat scroll 0 0 #fff;
+    padding: 5px 10px;
+    position: absolute;
+    right: 0;
+    top: 50%;
+    width: 60%;
+    color: @gray-text-light;
+    font-size: 1em;
+  }
+  
+  .views-field-nothing a,
+  .views-field-nothing div {
+    color: @gray-text-light;
+  }
+  
+  .views-field-nothing a:first-child {
+    color: @brand-primary;
+    font-size: 1.4em;
+    line-height: 1em;
+  }
+  
+  img {
+    height: auto;
+    width: 100%;
+  }
+  
+  .views-field-field-fotografia,
+  .views-field-field-org-picture,
+  .views-field-field-immagine-progetto {
+    max-height: 320px;
+    overflow: hidden;
+  }
+  
+  .panel-body {
+    padding: 0;
+  }
+}
+
+.view-header p {
+}
+
+.view-filters {
+  border-right: 2px solid @gray-light;
+  margin: 40px 0;
+  
+  label {
+    font-size: 1em;
+    font-weight: 700;
+  }
+  
+  .views-exposed-widget {
+    float: none;
+  }
+  
+  .views-exposed-widget .form-submit {
+    font-size: 1.2em;
+    margin-top: 1.6em;
+    padding: 5px 10px;
+  }
+}
+
+.views-page .views-body {
+  margin: 40px 0;
+}
+
+.view-progetti.view-display-id-page,
+.view-profili.view-display-id-page,
+.view-users.view-display-id-page,
+.view-consultazioni.view-display-id-page,
+.view-beni-comuni {
+  .views-row {
+    float: left;
+    width: 33%;
+  }
+  
+  .views-field-field-immagine-progetto {
+    height: 150px;
+    overflow: hidden;
+    padding: 0 8px;
+    
+    img {
+      border: 1px solid #eee;
+      padding: 2px;
+      width: 100%;
+    }
+  }
+  
+  .views-field-title,
+  .views-field-name {
+    font-weight: 700;
+    font-size: 1.2em;
+    line-height: 1.2em;
+    margin: 5px 10px;
+  }
+  
+  .views-field-field-tag-categorie,
+  .views-field-field-tags {
+    color: @gray-text-light;
+    margin: 0 10px;
+  }
+  
+  .views-field-field-tag-categorie a,
+  .views-field-field-tags a {
+    color: @gray-text-light;
+  }
+  
+  .views-field-field-descrizione-breve-progetto,
+  .views-field-body,
+  .views-field-field-tipologia {
+    margin: 10px;
+    color: @gray-text-light;
+  }
+  
+  .views-field-field-statement {
+    color: @gray-text-light;
+    line-height: 1.2em;
+    margin: 0 10px;
+  }
+}
+
+.view-profili.view-display-id-page,
+.view-users.view-display-id-page,
+.view-beni-comuni {
+  .views-row {
+    border: 1px solid #dadada;
+    box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+    margin: 5px;
+    padding: 10px 0;
+    width: 150px;
+  }
+  
+  .views-field-field-org-picture,
+  .views-field-picture {
+    border: 1px solid #dadada;
+    height: 128px;
+    margin: 0 10px;
+    overflow: hidden;
+    padding: 2px;
+    width: 128px;
+    
+    img {
+      width: 100%;
+    }
+  }
+  
+  .views-field-name {
+    a {
+      font-weight: 500;
+    }
+  }
+  
+  .views-field-field-presentazione {
+    border-top: 1px solid #dadada;
+    color: #666;
+    font-size: 0.9em;
+    margin: 5px 10px;
+    padding-top: 5px;
+  }
+  
+  .profili-links {
+    border-bottom: 2px solid @gray-light;
+    margin-bottom: 20px;
+    text-align: center;
+    
+    a {
+      margin-right: 15px;
+      color: @gray-dark;
+      font-size: 1.2em;
+      font-weight: 700;
+    }
+    
+    a.active {
+      border-bottom: 2px solid @gray-dark;
+    }
+    
+    a:hover {
+      text-decoration: none;
+      color: @gray;
+    }
+  }
+}
+
+.view-beni-comuni.view-display-id-block {
+  .views-row {
+    border: 0 none;
+    box-shadow: none;
+    float: none;
+    margin: 0;
+    padding: 0;
+    width: auto;
+  }
+}
+
+a.flag-register {
+  background-color: @brand-primary;
+  border-radius: 3px;
+  color: #fff;
+  display: block;
+  font-size: 1em;
+  font-weight: 400;
+  padding: 5px;
+  text-align: center;
+  width: 100%;
+}
+
+.view-heartbeat-activity-fields- {
+  font-size: 1em;
+  
+  .views-row {
+    margin-bottom: 10px;
+  }
+}
+
+.views-widget .form-control.form-select {
+  border: 0 none;
+  box-shadow: none;
+  height: auto;
+  padding: 0;
+  width: 100% !important;
+  
+  a.chosen-single {
+    color: #666;
+    font-size: 1em;
+    height: auto;
+    margin-top: 5px;
+  }
+}
+
+.social-links-user {
+  overflow: hidden;
+  
+  img {
+    margin-bottom: 10px;
+  }
+}
+
+.field-name-field-statement {
+  font-size: 1.3em;
+  color: @brand-primary;
+  font-style: italic;
+}
+
+.field-name-field-competenze,
+.field-name-field-risorse,
+.field-name-field-bisogni-competenze,
+.field-name-field-bisogni-risorse {
+  margin-bottom: 15px;
+  
+  .field-item {
+    margin-bottom: 5px;
+  }
+  
+  .field-item:before {
+    content: "# ";
+  }
+}
+
+.panel-competenze {
+  h3 {
+    font-size: 1.4em;
+    margin-top: 10px;
+  }
+}
+
+.view-progetti-proposti-organizzazione,
+.view-followers {
+  overflow: hidden;
+  margin: 0 5px;
+  
+  .field-name-field-stato {
+    border-top: 1px solid #dadada;
+    margin-top: 5px;
+    padding-top: 2px;
+    font-style: italic;
+  }
+  
+  .view-header {
+    margin: 0 10px 15px;
+  }
+}
+
+.panel-blog,
+.panel-comments,
+.panel-consultazione {
+  h1 {
+    border-bottom: 0 none;
+  }
+  
+  .panel-heading {
+    border-bottom: 1px solid #dadada !important;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+  }
+  
+  .panel-heading .field-name-og-group-ref,
+  .panel-heading .field-name-og-group-ref div {
+    display: inline;
+  }
+  
+  .tags {
+    margin-bottom: 15px;
+    
+    .field-item {
+      display: inline;
+      margin-right: 6px;
+    }
+
+    .field-item a:before {
+      content: "#";
+    }
+  }
+  
+  .row-date {
+    margin-top: 15px;
+
+    .field-label {
+      font-weight: 400;
+    }
+
+    .field-items {
+      font-weight: 700;
+    }
+  }
+  
+  .panel-heading span {
+    display: block;
+    font-size: 0.875em;
+    margin-top: -5px;
+  }
+  
+  .date {
+    color: @gray-dark;
+    font-size: 0.875em;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+  
+  .field-name-body {
+    color: @gray-dark;
+    line-height: 1.6em;
+  }
+  
+  .links li.first a {
+    font-size: 1.2em;
+  }
+  
+  .comment {
+    border-bottom: 1px solid #dadada;
+    margin: 10px 15px;
+    padding-bottom: 10px;
+    
+    .submitted {
+      color: #999;
+      font-size: 0.875em;
+      font-style: normal;
+      font-weight: 300;
+    }
+  }
+  
+  .panel-footer ul {
+    padding-left: 5px;
+  }
+  
+  .comment .links {
+    margin-top: 10px;
+    
+    li.first a {
+      font-size: 1em;
+    }
+  }
+}
+
+.panel-user {
+  h1 {
+    border-bottom: 0 none;
+  }
+  
+  .field-name-field-ebologna-nickname {
+    text-align: center;
+    margin: 5px 0 0;
+    line-height: 1em;
+    word-wrap: break-word;
+  }
+  
+  .label {
+    color: @gray-dark;
+    font-size: 1em;
+    font-weight: 700;
+    padding: 0;
+  }
+}
+
+.panel-blog-home {
+  .panel-body {
+    padding: 0;
+  }
+  
+  .panel-body>div:first-child {
+    border-right: 1px solid #dadada;
+    padding: 0;
+  }
+  
+  .views-field-nothing-1 {
+    background: #fff;
+    position: absolute;
+    padding: 10px;
+    width: 80%;
+    top: 40%;
+  }
+  
+  h2 {
+    border-bottom: 0 none;
+    font-size: 1.4em;
+    top: 50%;
+    margin-bottom: 0;
+  }
+  
+  h3 {
+    margin-top: 15px;
+  }
+  
+  .title {
+    margin-bottom: 5px;
+    a {
+      color: @gray-dark;
+      font-weight: 700;
+      text-decoration: none;
+    }
+    
+    a:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.list-group {
+  margin: 10px 0;
+  
+  .list-group-item {
+    display: block;
+    padding: 10px 15px;
+    margin-bottom: -1px;
+    border: 1px solid #dddddd;
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+    border-color: #d1d3d4;
+    padding: 10px 0px;
+    
+    a {
+      display: block;
+      border-left: 4px solid @iperbole-blue-secondary;
+      padding-left: 10px;
+      border-bottom: 0;
+      color: @gray-dark;
+      font-size: 14px;
+      font-weight: 400;
+    }
+  }
+  
+  .list-group-item:first-child {
+    border-top: 0 none;
+  }
+  
+  .autore a {
+    color: @iperbole-blue-secondary;
+    font-size: 1.2em;
+  }
+}
+
+#comments {
+  h2 {
+    font-size: 1.8em;
+  }
+}
+
+.panel-side {
+  
+  h2 {
+    font-size: 1.8em;
+    margin: 0 0 10px;
+    border-bottom: 0 none;
+  }
+  
+  .views-field-title {
+    margin-bottom: 5px;
+  }
+  
+  .views-field-title a {
+    color: @gray-dark;
+    font-size: 1em;
+  }
+  
+  .view-post-recenti-su-organizzazione .views-row {
+    margin-bottom: 5px;
+    border-bottom: 1px solid @gray-light;
+  }
+  
+  .panel-heading {
+    overflow: hidden;
+    
+    img {
+      height: 56px;
+    }
+    
+    a {
+      float: left;
+    }
+    
+    .field-name-og-group-ref a {
+      color: @gray;
+      float: left;
+      font-size: 1.4em;
+      margin-left: 15px;
+    }
+  }
+}
+
+.node-type-progetto,
+.node-type-bene-comune {
+  .field-name-og-group-ref {
+    margin-top: 10px;
+    
+    a {
+      color: @gray;
+    }
+  }
+  
+  .field-name-field-stato,
+  .bene_comune{
+    background: none repeat scroll 0 0 #50c143;
+    color: #fff;
+    float: right;
+    font-weight: 700;
+    margin-bottom: 5px;
+    margin-left: 30px;
+    margin-right: -20px;
+    padding: 0 20px;
+  }
+  
+  .bene_comune {
+    background: none repeat scroll 0 0 @brand-primary;
+    top: 45px;
+  }
+  
+  .field-name-field-geo {
+    margin-bottom: 20px;
+  }
+}
+
+.page-node-edit {
+  .field-name-field-stato,
+  .bene_comune{
+    background: 0 none;
+    color: inherit;
+    font-weight: inherit;
+    padding: inherit;
+    position: relative;
+  }
+}
+
+.field-name-field-tag-categorie,
+.field-name-field-tags {
+  overflow: hidden;
+  
+  .field-item {
+    float: left;
+    margin-right: 6px;
+  }
+  
+  .field-item a:before {
+    content: "#";
+  }
+}
+
+.field-name-field-tags {
+  margin-top: 15px;
+}
+
+.progetto-action {
+  margin-top: 5px;
+  border-top: 1px solid #dadada;
+  padding-top: 5px;
+  
+  li.flag-segui {
+    float: left;
+    margin-bottom: 0;
+    margin-left: 0;
+    width: auto;
+    
+    a {
+      padding: 5px 30px;
+    }
+  }
+}
+
+.prenditicura {
+  .panel-heading {
+    padding-bottom: 30px;
+  }
+  
+  .row-border {
+    background: #F0F1F1;
+    margin-left: -20px;
+    margin-right: -20px;
+  }
+  
+  .row-border:nth-of-type(2) {
+    background: #fff;
+  }
+  
+  .panel-body {
+    padding-bottom: 0;
+  }
+}
+
+.panel-schede {
+  .panel-views {
+    border: 0 none;
+    margin-bottom: 0;
+    box-shadow: none;
+    
+    .panel-heading {
+      padding-top: 0;
+      padding-bottom: 20px;
+      font-size: 1.2em;
+      font-weight: 300;
+    }
+    
+    .panel-body {
+      border: 0 none;
+      padding: 0 15px 15px;
+    }
+    
+    .views-body {
+      padding: 0;
+    }
+  }
+  
+  .scopri {
+    margin: 0 10px;
+  }
+}
+
+.counters {
+  div {
+    float: left;
+  }
+  
+  .likes {
+    margin: 0 10px;
+    border-left: 1px solid @gray;
+    border-right: 1px solid @gray;
+    padding: 0 10px
+  }
+}
+
+.row-counters {
+  margin-bottom: 15px;
+}
+
+.node-type-proposta {
+  .action-links {
+    margin-top: 15px;
+    
+    .list-inline {
+      margin-left: 0;
+    }
+  }
+}
+
+.node-type-consultazione .num-proposte {
+  float: right;
+  
+  span {
+    display: inline;
+  }
+}
+
+.field-name-field-documenti-allegati {
+  a {
+    color: @gray;
+    text-decoration: underline;
+  }
+  
+  img {
+    margin-top: -5px;
+  }
+}
+
+.submitted div {
+  display: inline;
+}
+
+.panel-intro-home {
+  margin-bottom: 0;
+//    color: @gray;
+    
+  
+  h1.home-title {
+    border-bottom: 0 none;
+    color: @gray-dark;
+    margin-top: 15px;
+    font-size: 2.3em;
+  }
+  
+  .highlight {
+    color: @brand-primary;
+    font-weight: 500;
+    font-size: 1.2em;
+    margin-top: 5px;
+  }
+  
+  h4 {
+    
+    font-size: 1.4em;
+    font-weight: 400;
+    margin-bottom: 0;
+    font-family: @font-family-sans-serif;
+    color: @gray;  
+    
+  }
+  
+  @media(min-width: 767px) {
+    .border {
+      border-left: 2px solid @gray-light;
+      padding-left: 15px;
+    }
+      .highlight    {
+          font-size:1.4em;
+      }
+  }
+}
+
+.leaflet-popup {
+  font-family: 'Roboto', arial;
+  
+  a {
+    color: @brand-primary;
+  }
+  
+  .leaflet-popup-content-wrapper {
+    border-radius: 4px;
+  }
+}
+
+.panel-accedi {
+  a {
+    color: @iperbole-blue-secondary;
+    margin-top: 10px;
+    font-weight: 700;
+    font-size: 1em;
+    line-height: 2em;
+  }
+}
+
+.not-logged-in .panel-accedi {
+  a {
+    color: #fff;
+  }
+  
+  a.scopri {
+    color: @iperbole-blue-secondary;
+  }
+}
+
+.panel-intro-page {
+  border-color: @iperbole-blue;
+  overflow: hidden;
+  
+  .intro-img {
+    background: #fff;
+    text-align: center;
+    
+    img {
+      width: 352px;
+    }
+  }
+}
+
+.page-node-21 .panel-intro-page img {
+  margin-left: -10px;
+  margin-top: -10px;
+}
+
+.panel-heading-blue {
+  h2 {
+//   color: @iperbole-blue;
+   color: @gray-dark
+  }
+}
+
+.panel-infografica {
+  .panel-body {
+    padding: 0;
+  }
+}
+
+.navbar-nav li.feedback a {
+  background: #fff;
+  color: @iperbole-blue;
+}
+
+.navbar-nav li.feedback.active a {
+  border-bottom: 6px solid #fff;
+}
+
+.qtip {
+  max-width: 200px;
+}
+
+.qtip-content {
+  border: 0 none;
+  box-shadow: 2px 2px 5px rgba(0,0,0,0.4);
+  padding: 0;
+}
+
+.user-tooltip {
+  a {
+    color: @gray-dark;
+    border-left: 5px solid @iperbole-blue;
+    display: block;
+    font-size: 1.4em;
+    font-weight: 500;
+    line-height: 1.2em;
+    margin: 10px;
+    padding: 5px 10px;
+  }
+  
+  .account {
+    border-bottom: 1px solid #dadada;
+  }
+  
+  .account a {
+    border-left-color: @iperbole-red-secondary;
+  }
+}
+
+.feedback-tooltip {
+  background-color: #4762FE;
+  color: #fff;
+  font-size: 1.3em;
+  line-height: 1.2em;
+  padding: 5px 10px;
+  border-bottom: 2px solid #0D47A1;
+}
+
+.qtip-dark {
+  background-color: #4762FE;
+  border-color: #4762FE;
+}
+
+#edit-invia,
+#edit-pubblica {
+  background-color: @green;
+}
+
+#edit-invia:hover,
+#edit-pubblica:hover {
+  background-color: @green-dark;
+}
+
+#edit-supporto-wrapper {
+  margin: 15px 0;
+  
+  .form-checkboxes {
+    .checkbox {
+      margin-bottom: 5px;
+    }
+    
+    input {
+      margin-left: 0;
+    }
+    
+    label {
+      font-size: 1.4em;
+      font-weight: 400;
+    }
+  }
+}
+
+.entitytype-feedback-form,
+.entityform {
+  h2 {
+    margin-top: 15px;
+    color: @iperbole-blue;
+  }
+  
+  label {
+    font-size: 1em;
+  }
+  
+  table label {
+    font-size: 14px;
+  }
+  
+  input.form-checkbox {
+    margin-left: 0;
+  }
+
+  #edit-field-partecipa-workshop {
+    label {
+      font-size: 1.3em;
+    }
+    
+    p.help-block {
+      color: @gray-dark;
+      border-left: 2px solid @iperbole-blue;
+      font-size: 1.2em;
+      line-height: 1em;
+      margin-top: 10px;
+      padding-left: 15px;
+    }
+  }
+  
+  .btn {
+    font-size: 1em;
+    margin-top: 15px;
+  }
+  
+  .tabledrag-toggle-weight-wrapper {
+    display: none;
+  }
+  
+  .pre-instructions {
+    font-size: 1.2em;
+    line-height: 1.2em;
+    margin-bottom: 25px;
+  }
+  
+  .panel {
+    border: 1px solid #dadada;
+   
+    .panel-title {
+      font-size: 14px;
+      padding-bottom: 15px;
+    }
+  }
+  
+  .field-name-field-data-intervento-multiple {
+    margin-bottom: 35px;
+  }
+  
+  .form-control {
+    height: auto;
+  }
+  
+  .field-type-list-boolean {
+    label {
+      font-size: 14px;
+    }
+  }
+  
+  .input-group-addon, .input-group-btn, .input-group .form-control {
+    display: block;
+    float: none;
+  }
+  
+  .form-type-managed-file {
+    .btn {
+      clear: both;
+      display: block;
+      font-size: 14px;
+      margin-top: 10px;
+      position: relative;
+    }
+  }
+  
+  .intro {
+    border-bottom: 1px solid @brand-primary;
+    margin-top: 15px;
+    margin-bottom: 15px;
+  }
+  
+  .form-group {
+    margin-bottom: 25px;
+  }
+  
+  fieldset {
+    .panel-body, .panel-heading {
+      padding: 10px 10px 5px;
+    }
+    
+    .form-group {
+      margin-bottom: 10px;
+    }
+  }
+}
+
+.segnala {
+  margin-top: 15px;
+}
+
+.view-segnalazioni {
+  .list-group .list-group-item {
+    .views-field {
+      border-left: 4px solid @iperbole-blue;
+      padding-left: 15px;
+      font-size: 1.2em;
+      font-weight: 400;
+    }
+    
+    .views-field-field-nome {
+      color: @gray-text-light;
+    }
+
+    a {
+      border: 0 none;
+      font-size: 1em;
+      padding: 0;
+      color: @iperbole-blue;
+    }
+  }
+}
+
+form#user-profile-form .btn, form.comment-form .btn, form.node-form .btn {
+    font-size: 1em;
+}
+
+#user-cancel-confirm-form {
+  background-color: #fff;
+  border-bottom: 4px solid @brand-primary;
+  border-top: 4px solid @brand-primary;
+  margin-bottom: 25px;
+  padding: 15px;
+  overflow: hidden;
+  
+  button {
+    float: left;
+    font-size: 1em;
+    margin-top: 15px;
+    margin-right: 15px;
+  }
+  
+  #edit-cancel {
+    .btn;
+    background-color: @brand-primary;
+    color: #fff;
+    display: block;
+    float: left;
+    font-size: 1em;
+    margin-top: 15px;
+  }
+  
+  #edit-cancel:hover {
+    background-color: @iperbole-blue-secondary;
+    color: #fff;
+  }
+}
+
+.btn-primary {
+  background-color: @brand-primary;
+  color: #fff;
+  font-size: 1em;
+  padding: 5px 15px;
+}
+
+.region-content .alert {
+  font-size: 1em;
+}
+
+.bozza-alert {
+  border-top: 2px solid @iperbole-blue-secondary;
+}
+
+.pager {
+    clear: both;
+    color: #333;
+    font-size: 1em;
+    font-weight: 300;
+}
+
+.patto-item {
+  a {
+    font-weight: 700;
+  }
+}

@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the Comunità Article CT feature.
+ */
+
+include_once 'comunita_article_ct.features.inc';

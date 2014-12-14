@@ -1,0 +1,92 @@
+<?php
+
+/**
+ * Implementation of hook_menu().
+ */
+function menu_editor_menu() {
+  $items['admin/structure/menu/manage/%menu/poweredit'] = array(
+    'title' => 'Power Edit',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('menu_editor_overview_form', 4),
+    // 'title callback' => 'menu_editor_overview_title',
+    // 'title arguments' => array(3),
+    'access callback' => 'menu_editor_form_access',
+    'access arguments' => array(4),
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'menu_editor.admin.inc',
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function menu_editor_permission() {
+  $menus = menu_get_menus(TRUE);
+  $perm = array();
+  foreach ($menus as $menu_machine_name => $menu_display_name) {
+    $perm["menu edit $menu_machine_name"] = array(
+      'title' => t("Menu editor: Edit @menu", array('@menu' => $menu_display_name)),
+    );
+  }
+  return $perm;
+}
+
+function menu_editor_form_access($menu) {
+  return
+    user_access('administer menu') ||
+    user_access("menu edit $menu[menu_name]")
+  ;
+}
+
+// function menu_editor_admin_menu() {
+//   $result = db_query("SELECT * FROM {menu_custom} ORDER BY title");
+//   $items = array();
+//   while ($menu = db_fetch_array($result)) {
+//     $items[] = array(
+//       'title' => $menu['title'],
+//       'path' => 'admin/build/menu-customize/'. $menu['menu_name'] . '/poweredit',
+//       'parent_path' => 'admin/build/menu/list',
+//       'weight' => 100,
+//     );
+//   }
+//   return $items;
+// }
+
+/**
+ * Implemenation of hook_theme().
+ */
+function menu_editor_theme() {
+  return array(
+    'menu_editor_overview_form' => array(
+      'file' => 'menu_editor.admin.inc',
+      'render element' => 'form',
+    ),
+  );
+}
+
+/**
+ * Title callback for the menu overview page and links.
+ */
+function menu_editor_overview_title($menu) {
+  return $menu['title'];
+}
+
+
+
+function menu_editor_get_placeholders() {
+  static $placeholders;
+  if (!isset($placeholders)) {
+    $placeholders = module_invoke_all('menu_editor_placeholders');
+  }
+  return $placeholders;
+}
+
+function menu_editor_get_path_for_placeholder($placeholder, $mlid) {
+  $placeholders = menu_editor_get_placeholders();
+  if (isset($placeholders[$placeholder])) {
+    return str_replace('%mlid', $mlid, $placeholders[$placeholder]);
+  }
+  return $placeholder;
+}

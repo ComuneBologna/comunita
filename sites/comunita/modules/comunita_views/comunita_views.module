@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the Comunità Views feature.
+ */
+
+include_once 'comunita_views.features.inc';

@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the Comunita Forms feature.
+ */
+
+include_once 'comunita_forms.features.inc';

@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the Comunità Gruppo di Consultazioni CT feature.
+ */
+
+include_once 'comunita_gruppo_consultazioni_ct.features.inc';

@@ -1,0 +1,105 @@
+<?php
+
+/**
+ * @file
+ * Find node paths on menu item creation via autocomplete.
+ * 
+ * This is a shameless clone of
+ * http://drupal.org/project/mpac
+ * by stBorchert
+ */
+
+/**
+ * Implements hook_menu().
+ *
+ * @return An array of menu items.
+ */
+function me_path_autocomplete_menu() {
+  $items = array();
+
+  $items['mepac/autocomplete'] = array(
+    'title' => 'Menu path autocomplete',
+    'description' => 'Autocomplete callback for menu path autocomplete',
+    'page callback' => 'me_path_autocomplete',
+    'access callback' => 'user_access',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+
+  return $items;
+}
+
+/**
+ * Find nodes and URL aliases based on title.
+ * @param $string
+ *   Title of element to find.
+ * @return
+ *   List of elements with path as key.
+ */
+function me_path_autocomplete($string = NULL) {
+  $args = func_get_args();
+  $string = implode('/', $args);
+  $string = strtolower($string);
+  $title = filter_xss_admin($string);
+  $matches = array();
+  // $matches[$string] = $string;
+
+  foreach (module_invoke_all('menu_editor_placeholders') as $placeholder_code => $placeholder_path) {
+    if (!strlen($string) || count(explode($string, $placeholder_code)) > 1) {
+      $matches[$placeholder_code] = htmlentities($placeholder_code);
+    }
+  }
+
+  
+  // Get a list of all nodes where the title matches the given string.
+  if (strlen($string) > 1) {
+    $like_placeholder = (strlen($string) > 3) ? "%" . db_like($string) . "%" : db_like($string) . "%";
+    $nodes = db_select('node', 'n')
+      ->fields('n')
+      ->condition('title', $like_placeholder, 'LIKE')
+      ->range(0, 8)
+      ->execute();
+
+    foreach ($nodes as $node) {
+      // Add node path and title to list.
+      if (node_access('view', $node) && $node->status) {
+        $node_title = check_plain($node->title);
+        $nid = $node->nid;
+        $lang = $node->language != LANGUAGE_NONE ? ($node->language . ': ') : '';
+        $matches['node/'. $node->nid] = $lang . "$node_title [nid:$nid]";
+      }
+    }
+    if (module_exists('path')) {
+      // Get a list of all URL aliases where the destination matches the given
+      // string.
+      $aliases = db_select('url_alias')
+        ->fields('url_alias')
+        ->condition('alias', $like_placeholder, 'LIKE')
+        ->range(0, 8)
+        ->execute();
+
+      foreach ($aliases as $alias) {
+        // Add alias source and destination to list (and add a special marker to
+        // the item).
+        $lang = $alias->language != LANGUAGE_NONE ? ($alias->language . ': ') : '';
+        $src = check_plain($alias->source);
+        $dst = check_plain($alias->alias);
+        $matches[$alias->source] = $lang . "$dst | $src";
+      }
+    }
+  }
+  
+  drupal_json_output($matches);
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * Change path field to autocomplete field.
+ */
+function me_path_autocomplete_form_menu_editor_overview_form_alter(&$form, &$form_state) {
+  foreach (element_children($form) as $element_key) {
+    $form[$element_key]['link_path']['#autocomplete_path'] = 'mepac/autocomplete';
+  }
+}
+

@@ -1,0 +1,143 @@
+<?php
+/**
+ * @file
+ *  Install functions
+ */
+
+/**
+ * Implements hook_schema().
+ */
+  function entity_rules_schema() {
+  $schema = array();
+
+  $schema['entity_rule_setting'] = array(
+    'description' => 'Stores about entity rules settings.',
+    'fields' => array(
+      'id' => array(
+        'type' => 'serial',
+        'not null' => TRUE,
+        'description' => 'Primary Key: Unique entity rule setting type identifier.',
+      ),
+      'entity_type' => array(
+        'description' => 'Entity type for this setting.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+      ),
+      'bundle' => array(
+        'description' => 'Bundle for this setting.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+      ),
+      'op' => array(
+        'description' => 'Operation for this setting.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+      ),
+      'rules_config' => array(
+        'description' => 'rules config for this setting.',
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => TRUE,
+      ),
+      'weight' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'size' => 'tiny',
+        'description' => 'The weight of this entity rule setting in relation to others.',
+      ),
+      'args' => array(
+        'type' => 'text',
+        'not null' => FALSE,
+        'size' => 'big',
+        'serialize' => TRUE,
+        'description' => 'A serialized array of arguments related to this entity rule setting.',
+      ),
+      'false_msg' => array(
+        'description' => 'Optional false message.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => FALSE,
+      ),
+    ) + entity_exportable_schema_fields(),
+    'primary key' => array('id'),
+    'unique keys' => array(
+      'setting' => array(
+        'entity_type',
+        'bundle',
+        'op',
+        'rules_config',
+        'weight'
+      ),
+    ),
+  );
+
+  return $schema;
+}
+
+/**
+ * Add entity_rule_setting table.
+ *
+ * Implements hook_update_n().
+ *
+ * Converts variables to entities and deletes variables.
+ */
+function entity_rules_update_7101() {
+
+  $schema = entity_rules_schema();
+  db_create_table('entity_rule_setting', $schema['entity_rule_setting']);
+  foreach (entity_get_info() as $entity_type => $entity_info) {
+    if (!empty($entity_info['fieldable'])) {
+      foreach ($entity_info['bundles'] as $bundle_name => $bundle_info) {
+        $all_ops = array('create', 'update', 'delete', 'validation', 'form_access');
+        foreach ($all_ops as $op) {
+          $var_name = 'entity_rules_' . $entity_type . '__' . $bundle_name . '_' . $op;
+          $settings = variable_get($var_name, NULL);
+          if (!empty($settings)) {
+            foreach ($settings as $rules_name => $setting) {
+              $setting['rules_config'] = $rules_name;
+              $setting['entity_type'] = $entity_type;
+              $setting['bundle'] = $bundle_name;
+              $setting['op'] = $op;
+              $entity = entity_create('entity_rule_setting' , $setting);
+              entity_save('entity_rule_setting', $entity);
+            }
+          }
+          // Delete variable if it exists.
+          if ($settings !== NULL) {
+            variable_del($var_name);
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Update variables to from old format.
+ *
+ * Implements hook_update_N().
+ */
+function entity_rules_update_7102(&$sandbox) {
+  if ($settings = variable_get('entity_rules_settings')) {
+    if (!empty($settings['entity_types'])) {
+      variable_set('entity_rules_types', $settings['entity_types']);
+    }
+    if (!empty($settings['permissions'])) {
+      variable_set('entity_rules_permissions', $settings['permissions']);
+    }
+  }
+  variable_del('entity_rules_settings');
+}
+/**
+ * Implements hook_uninstall().
+ */
+function entity_rules_uninstall() {
+  $vars = array('entity_rules_settings','entity_rules_types','entity_rules_types');
+  foreach ($vars as $var) {
+    variable_del($var);
+  }
+}

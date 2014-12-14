@@ -1,0 +1,73 @@
+<?php
+/**
+ * @file
+ * Modulo che integra i Form Engineering
+ *
+ **/
+
+/**
+ * Implements hook_menu().
+ */
+function comunita_form_menu() {
+  $items = array();
+
+  $items['form/%'] = array(
+    'title' => t('Form'),
+    'page callback' => 'comunita_form_view_form_eng',
+    'access arguments' => array('access content'),
+    'page arguments' => array(1),
+    'type' => MENU_CALLBACK,
+  );
+  
+  return $items;
+}
+
+/**
+ * Implement hook_theme().
+ */
+function comunita_form_theme() {
+  return array(
+    'form_eng' => array(
+      'template' => 'form_eng',
+      'variables' => array(
+        'attestato' => NULL,
+      )
+    ),
+  );
+}
+
+function comunita_form_view_form_eng($id_form) {
+  drupal_add_js('/bologna/modulisticaonline/modulisticaonline.nocache.js', 'file');
+  
+  $ret = array(
+    '#theme'        => 'form_eng',
+    'id_form'       => $id_form,
+  );
+  
+  return $ret;
+}
+
+/**
+ * Implements template_preprocess_page()
+ */
+function comunita_form_preprocess_page(&$variables) {
+  //drupal_add_js('http://comunita.dev/bologna/modulisticaonline/modulisticaonline.nocache.js', 'external');
+}
+
+/*
+ * Edit form vandalismo
+ */
+function comunita_form_form_entityform_edit_form_alter(&$form, &$form_state, $form_id) {
+  if($form_id == 'vandalismo_grafico_entityform_edit_form') {
+    $account = user_load($GLOBALS['user']->uid);
+    $form['field_nome'][LANGUAGE_NONE][0]['value']['#default_value'] = $account->field_nome[LANGUAGE_NONE][0]['value'];
+    $form['field_cognome'][LANGUAGE_NONE][0]['value']['#default_value'] = $account->field_cognome[LANGUAGE_NONE][0]['value'];
+    if(!empty($account->field_telefono)) {
+      $form['field_telefono'][LANGUAGE_NONE][0]['value']['#default_value'] = $account->field_telefono[LANGUAGE_NONE][0]['value'];
+    }
+    $form['field_email'][LANGUAGE_NONE][0]['email']['#default_value'] = $account->mail;
+    
+    $form['field_larghezza'][LANGUAGE_NONE]['#prefix'] = '<div class="intro"><p>Indicare le dimensioni dell\'area di cantiere larghezza per lunghezza in metri (per area di cantiere si intende l\'area necessaria allo svolgimento dei lavori</p></div>';
+    $form['field_pulitura'][LANGUAGE_NONE][0]['#prefix'] = '<div class="intro"><p>Inserire i nomi dei prodotti utilizzati per le seguenti azioni</p></div>';
+  }
+}

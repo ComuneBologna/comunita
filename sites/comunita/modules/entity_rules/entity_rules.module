@@ -1,0 +1,1172 @@
+<?php
+/**
+ * @file
+ * Module file for the Entity Rules.
+ */
+
+define('ENTITY_RULES_DEFAULT_TYPES', 'user,node,taxonomy_term');
+define('ENTITY_RULES_DEFAULT_PERMISSIONS', 'none');
+
+/**
+ * Implements hook_entity_info().
+ */
+function entity_rules_entity_info() {
+  $return = array();
+
+  // The entity that holds information about the entity types
+  $return['entity_rule_setting'] = array(
+    'label' => t('Entity Rule Setting'),
+    'entity class' => 'Entity',
+    'controller class' => 'EntityAPIControllerExportable',
+    'base table' => 'entity_rule_setting',
+    'fieldable' => FALSE,
+    'exportable' => TRUE,
+    'entity keys' => array(
+      'id' => 'id',
+    ),
+    'bundles' => array(
+      'entity_rule_setting' => array(
+        'label' => t('Entity Rules Setting'),
+      ),
+    ),
+    'view modes' => array(
+      'full' => array(
+        'label' => t('Full content'),
+        'custom settings' => FALSE,
+      ),
+    ),
+    'module' => 'entity_rules',
+    'metadata controller class' => 'EntityDefaultMetadataController',
+  );
+  return $return;
+}
+
+/**
+ * Implements hook_menu().
+ */
+function entity_rules_menu() {
+  $items = array();
+  $items['admin/config/workflow/entity_rules'] = array(
+    'title' => 'Entity Rules',
+    'page callback' => 'entity_rules_entity_type_list',
+    'access arguments' => array('administer rules'),
+    'file path' => drupal_get_path('module', 'entity_rules'),
+    'file' => 'entity_rules.admin.inc',
+    'type' => MENU_NORMAL_ITEM,
+  );
+  $items['admin/config/workflow/entity_rules/entity-types'] = array(
+    'title' => 'Entity Types',
+    'page callback' => 'entity_rules_entity_type_list',
+    'access arguments' => array('administer rules'),
+    'file path' => drupal_get_path('module', 'entity_rules'),
+    'file' => 'entity_rules.admin.inc',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => -100
+  );
+  $items['admin/config/workflow/entity_rules/settings'] = array(
+    'title' => 'Settings',
+    'description' => '',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('entity_rules_admin_form'),
+    'access arguments' => array('administer rules'),
+    'file' => 'entity_rules.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 1000,
+  );
+  $rule_types = _entity_rules_get_rule_types();
+  foreach ($rule_types as $op => $rule_type) {
+    // Add the menu items for the various Rules forms.
+    $controller = new RulesUIController();
+    $rule_path = 'admin/config/workflow/entity_rules' . "/{$op}";
+    $items += $controller->config_menu($rule_path);
+    $items[$rule_path] = array(
+      'title' => $rule_type['label'] . ' ' . t('Rules'),
+      'description' => empty($rule_type['description']) ? '' : $rule_type['description'],
+      'page callback' => 'entity_rules_list',
+      'page arguments' => array($op),
+      'access arguments' => array('administer rules'),
+      'file path' => drupal_get_path('module', 'entity_rules'),
+      'file' => 'entity_rules.admin.inc',
+      'type' => MENU_LOCAL_TASK,
+    );
+    $items["$rule_path/add"] = array(
+      'title' => t('Add a @op rule', array('@op' => $rule_type['label'])),
+      'description' => "Adds an additional {$rule_type['label']} rule configuration.",
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array("entity_rules_add_rule_form", $rule_path),
+      'access arguments' => array('administer rules'),
+      'file path' => drupal_get_path('module', 'rules_admin'),
+      'file' => 'rules_admin.inc',
+      'type' => MENU_LOCAL_ACTION,
+    );
+    $items["$rule_path/manage/%rules_config"]['page arguments'][0] = 'entity_rules_form_edit_rules_config';
+    $items["$rule_path/manage/%rules_config/clone"]['page arguments'][0] = 'entity_rules_form_clone_rules_config';
+
+  }
+  // Create tabs for all possible bundles.
+  $permissions = variable_get('entity_rules_permissions', ENTITY_RULES_DEFAULT_PERMISSIONS);
+  $enabled_types = variable_get('entity_rules_types', explode(',' , ENTITY_RULES_DEFAULT_TYPES));
+  $entity_infos = entity_get_info();
+  $entity_infos = array_intersect_key($entity_infos, array_flip($enabled_types));
+  $items["admin/config/workflow/entity-rules-triggers"] = array(
+    'title' => 'Entity Rules - Triggers',
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'entity_rules.admin.inc',
+    'page callback' => 'entity_rules_entity_type_list',
+    'access callback' => 'entity_rules_overview_access',
+    'weight' => 10,
+  );
+
+
+  foreach ($entity_infos as $entity_type => $entity_info) {
+    if ($entity_info['fieldable']) {
+      foreach ($entity_info['bundles'] as $bundle_name => $bundle_info) {
+        if (isset($bundle_info['admin'])) {
+          // Each entity_type may support different rule types
+          $rule_types = _entity_rules_get_rule_types($entity_type);
+          // Extract path information from the bundle.
+          $path = $bundle_info['admin']['path'];
+
+          // Determine whether this path caters for several bundles (usually all)
+          // of one entity type, or just one.
+          if (isset($bundle_info['admin']['bundle argument'])) {
+            /*
+             * Different bundles can appear on the same path (for example %node_type and
+             * %comment_node_type). To allow field_ui_menu_load() to extract the
+             * actual bundle object from the translated menu router path
+             * arguments, we need to identify the argument position of the bundle
+             * name string ('bundle argument') and pass that position to the menu
+             * loader. The position needs to be casted into a string; otherwise it
+             * would be replaced with the bundle name string.
+             */
+            $bundle_arg = $bundle_info['admin']['bundle argument'];
+            $bundle_pos = (string) $bundle_arg;
+          }
+          else {
+            // Otherwise, this path is for a single bundle. Things are much simpler!
+            $bundle_arg = $bundle_name;
+            $bundle_pos = '0';
+          }
+          // This is the position of the %field_ui_menu placeholder in the
+          // items below.
+          $rule_type_position = count(explode('/', $path)) + 1;
+
+          $access = _entity_rules_menu_access_settings($entity_type, $bundle_name, $bundle_info);
+
+          $weight = 10;
+          foreach ($rule_types as $op => $rule_type) {
+            if ($weight == 10) {
+              $menu_type = MENU_DEFAULT_LOCAL_TASK;
+              $items["$path/entity-rules"] = array(
+                  'title' => 'Rules',
+                  'type' => MENU_LOCAL_TASK,
+                  'file' => 'entity_rules.admin.inc',
+                  'page callback' => 'entity_rules_type_op_rules',
+                  'page arguments' => array($op, $entity_type, $bundle_arg),
+                  'weight' => 10,
+                ) + $access;
+              if ($entity_type == 'comment') {
+                $items["$path/entity-rules"]['title'] = 'Comment Rules';
+              }
+
+            }
+            else {
+              $menu_type = MENU_LOCAL_TASK;
+            }
+
+
+            $items["$path/entity-rules/$op"] = array(
+                'title' => t('@op Rules', array('@op' => $rule_type['label'])),
+                'page callback' => 'entity_rules_type_op_rules',
+                'page arguments' => array($op, $entity_type, $bundle_arg),
+                'type' => $menu_type,
+                'file' => 'entity_rules.admin.inc',
+                'weight' => $weight++,
+              ) + $access;
+
+            // Have to make sure we don't go over MENU_MAX_PARTS(9)
+            $rule_position = (int) $rule_type_position + 1;
+            $items["$path/entity-rules-remove/$op/%"] = array(
+                'title' => t('@op Rules', array('@op' => $rule_type['label'])),
+                'page callback' => 'entity_rules_type_op_rules_remove',
+                'page arguments' => array(
+                  $op,
+                  $entity_type,
+                  $bundle_arg,
+                  $rule_position
+                ),
+                'type' => MENU_CALLBACK,
+                'file' => 'entity_rules.admin.inc',
+                'weight' => $weight++,
+              ) + $access;
+            if ($permissions != 'none') {
+              // If permission are set then make separate menu
+              $other_menu_item = $items["$path/entity-rules/$op"];
+              if ($op == 'create') {
+                $other_menu_item['type'] = MENU_DEFAULT_LOCAL_TASK;
+              }
+              else {
+                $other_menu_item['type'] = MENU_LOCAL_TASK;
+              }
+
+              $other_menu_item['page arguments'] = array(
+                $op,
+                $entity_type,
+                $bundle_name
+              );
+              
+              $items["admin/config/workflow/entity-rules-triggers/$entity_type/$bundle_name/$op"] = $other_menu_item;
+              $other_menu_item = $items["$path/entity-rules-remove/$op/%"];
+              $other_menu_item['page arguments'] = array(
+                $op,
+                $entity_type,
+                $bundle_name,
+                7
+              );
+              $items["admin/config/workflow/entity-rules-remove-triggers/$entity_type/$bundle_name/$op"] = $other_menu_item;
+            }
+          }
+
+          if ($permissions != 'none') {
+            // If permission are set then make separate menu
+            $other_menu_item = $items["$path/entity-rules"];
+            $other_menu_item['type'] = MENU_CALLBACK;
+            $other_menu_item['title'] = t('Entity Rules') . ' - ' . $entity_info['label'] . ' - ' . $bundle_info['label'];
+            $other_menu_item['page arguments'] = array(
+              'create',
+              $entity_type,
+              $bundle_name
+            );
+            $items["admin/config/workflow/entity-rules-triggers/$entity_type/$bundle_name"] = $other_menu_item;
+          }
+
+        }
+      }
+    }
+  }
+  return $items;
+}
+
+/**
+ * Access callback for overview admin screen.
+ *
+ * This screen allows administer Entity Rules with access to Bundle admin pages
+ * @return bool
+ */
+function entity_rules_overview_access() {
+  $permission = variable_get('entity_rules_permissions', ENTITY_RULES_DEFAULT_PERMISSIONS);
+  $enabled_types = variable_get('entity_rules_types', explode(',' , ENTITY_RULES_DEFAULT_TYPES));
+  if ($permission == 'none') {
+    return FALSE;
+  }
+  if ($permission == 'single') {
+    return user_access('administer entity_rules settings');
+  }
+  if ($permission == 'entity_type') {
+    // If permissions are set by entity type then check to see if access to any
+    $entity_infos = entity_get_info();
+    $entity_infos = array_intersect_key($entity_infos, array_flip($enabled_types));
+
+    foreach ($entity_infos as $entity_type => $entity_info) {
+      if (user_access("administer $entity_type entity_rules settings")) {
+        return TRUE;
+      }
+    }
+  }
+  return FALSE;
+}
+
+/**
+ * Utility function to create 'access' property for hook_menu.
+ *
+ * Used to define permission on the bundle management pages
+ * @param $entity_type
+ * @param $bundle_name
+ * @param $bundle_info
+ * @return array
+ */
+function _entity_rules_menu_access_settings($entity_type, $bundle_name, $bundle_info) {
+  $permission = variable_get('entity_rules_permissions', ENTITY_RULES_DEFAULT_PERMISSIONS);
+  if ($permission == 'none') {
+    $access = array_intersect_key($bundle_info['admin'], drupal_map_assoc(array(
+      'access callback',
+      'access arguments'
+    )));
+    $access += array(
+      'access callback' => 'user_access',
+      'access arguments' => array('administer site configuration'),
+    );
+
+  }
+  if ($permission == 'single') {
+    $access = array(
+      'access callback' => 'user_access',
+      'access arguments' => array('administer entity_rules settings'),
+    );
+  }
+  if ($permission == 'entity_type') {
+    $access = array(
+      'access callback' => 'user_access',
+      'access arguments' => array("administer $entity_type entity_rules settings"),
+    );
+  }
+
+
+  return $access;
+}
+
+/**
+ * Utility function to get types of Rules used with Entity Types.
+ */
+function _entity_rules_get_rule_types($entity_type = NULL) {
+  // @todo cache this function
+  // Let developer remove Rules types for a site.
+  //$rule_types = array('create','update', 'access', 'validation', 'delete');
+  $possible_types = array(
+    'create',
+    'update',
+    'delete',
+    'validation',
+    'form_access'
+  );
+  $rule_types = module_invoke_all('entity_rules_event_info');
+  $entity_type_settings = _entity_rules_get_type_settings();
+  if (!empty($entity_type)) {
+    if (!isset($entity_type_settings[$entity_type])) {
+      // This type is not enabled
+      return array();
+    }
+    if (isset($entity_type_settings[$entity_type]['ops'])) {
+      // Module is explicitly defining ops
+      $rule_types = array_intersect_key($rule_types, array_flip($entity_type_settings[$entity_type]['ops']));
+    }
+    else {
+      // Check to see if 'forms' is set
+      foreach ($rule_types as $event => $info) {
+        if ($info['needs_form']) {
+          if (empty($entity_type_settings[$entity_type]['forms'])) {
+            // This event needs forms and this entity doesn't specify forms.
+            unset($rule_types[$event]);
+            continue;
+          }
+        }
+        if (isset($info['entity_types']) && !in_array($entity_type, $info['entity_types'])) {
+          // This event specifies entity types and this one isn't included
+          unset($rule_types[$event]);
+        }
+      }
+    }
+
+  }
+  else {
+    $found_type_supports_forms = FALSE;
+    // Loop through types to see if any support form ops
+    foreach ($entity_type_settings as $entity_type_setting) {
+      if (!empty($entity_type_setting['forms'])) {
+        // Found a type that supports validation
+        $found_type_supports_forms = TRUE;
+      }
+    }
+    if (!$found_type_supports_forms) {
+      foreach (array_keys($rule_types) as $rule_type) {
+        if (!empty($rule_type_info['needs_form'])) {
+          // Remove form rule type
+          unset($rule_types[$rule_type]);
+        }
+      }
+    }
+
+  }
+  return $rule_types;
+}
+
+/**
+ * Implements hook_entity_rules_event_info().
+ *
+ * Define basic CRUD rules
+ */
+function entity_rules_entity_rules_event_info() {
+  $crud_rule_vars[] = array(
+    'type' => 'boolean',
+    'label' => 'Continue Rules',
+    'name' => 'continue',
+    'usage' => '11',
+    // Parameter var. Why is this not defined as constant in Rules
+    'weight' => 1,
+    'description' => t('If set to FALSE no rules after the current will be invoked.'),
+    'entity_rules_settings' => array('default_value' => TRUE),
+  );
+  $defaults = array(
+    'needs_form' => FALSE,
+    'component_types' => array('rule', 'rule set'),
+  );
+
+  return array(
+    'create' => array(
+        'label' => t('Create'),
+        'vars' => $crud_rule_vars,
+      ) + $defaults,
+    'update' => array(
+        'label' => t('Update'),
+        'vars' => $crud_rule_vars,
+      ) + $defaults,
+    'delete' => array(
+        'label' => t('Delete'),
+        'vars' => $crud_rule_vars,
+      ) + $defaults,
+    'validation' => array(
+        'label' => t('Validation'),
+        'needs_form' => TRUE,
+        'component_types' => array('rule', 'rule set', 'and', 'or'),
+        'conditional vars' => array(
+          array(
+            'type' => 'boolean',
+            'label' => 'Entity Validates',
+            'name' => 'entity_is_validate',
+            'usage' => '11',
+            // Parameter var. Why is this not defined as constant in Rules
+            'weight' => 1,
+            'description' => t('If set to FALSE the entity fails validation.'),
+            'entity_rules_settings' => array('default_value' => TRUE),
+          ),
+        )
+      ) + $defaults,
+    'form_access' => array(
+        'label' => t('Form Access'),
+        'needs_form' => TRUE,
+        'component_types' => array('rule', 'rule set', 'and', 'or'),
+        'conditional vars' => array(
+          array(
+            'type' => 'boolean',
+            'label' => 'Entity Form Access',
+            'name' => 'entity_form_acccess',
+            'usage' => '11',
+            // Parameter var. Why is this not defined as constant in Rules
+            'weight' => 1,
+            'description' => t('If set to FALSE then form will not be shown to the user.'),
+            'entity_rules_settings' => array('default_value' => TRUE),
+          ),
+        )
+      ) + $defaults,
+  );
+}
+
+/**
+ * Clears settings for all types.
+ */
+function entity_rules_clear_type_settings() {
+  _entity_rules_get_type_settings(NULL, TRUE);
+}
+
+/**
+ * Returns settings for type settings either all entity types or specific type.
+ *
+ *
+ */
+/**
+ * Returns settings for type settings either all entity types or specific type.
+ *
+ * @param $entity_type
+ *   The entity type to get setting for. If null then returns all types
+ * @param $reset
+ *   Whether to reset all type settings.
+ * @return
+ *   Array of settings key by entity type. If entity type set then settings only for that type.
+ *   Possible settings include
+ *     'forms' An array of form ids that are used to add or edit the entity type
+ */
+function _entity_rules_get_type_settings($entity_type = NULL, $reset = FALSE) {
+  $all_type_settings = & drupal_static(__FUNCTION__);
+  if ($reset) {
+    unset($all_type_settings);
+    cache_clear_all('entity_rules_type_settings', 'cache');
+  }
+  if (!isset($all_type_settings)) {
+    if ($cache = cache_get('entity_rules_type_settings')) {
+      $all_type_settings = $cache->data;
+    }
+    else {
+      // Do your expensive calculations here, and populate $my_data
+      // with the correct stuff..
+      $all_type_settings = module_invoke_all('entity_rules_info');
+      $enabled_types = variable_get('entity_rules_types', explode(',' , ENTITY_RULES_DEFAULT_TYPES));
+      // Filter out types that weren't enabled via settings
+      $all_type_settings = array_intersect_key($all_type_settings, array_flip($enabled_types));
+      $default_settings = array(
+        'form_settings' => array(
+          'exclude_validation_ops' => array('delete'),
+        ),
+      );
+      foreach ($all_type_settings as &$type_setting) {
+        $type_setting += $default_settings;
+      }
+      cache_set('entity_rules_type_settings', $all_type_settings, 'cache');
+    }
+  }
+  if (empty($entity_type)) {
+    return $all_type_settings;
+  }
+  else {
+    return $all_type_settings[$entity_type];
+  }
+
+
+}
+
+/**
+ * Implements hook_entity_rules_info().
+ */
+function entity_rules_entity_rules_info() {
+  // @todo how to handle bundles that different add and edit forms like user?
+  $entity_infos = entity_get_info();
+
+  $type_info = array(
+    'taxonomy_term' => array(
+      'forms' => array('taxonomy_form_term'),
+    ),
+    'user' => array(
+      'forms' => array('user_register_form', 'user_profile_form'),
+    ),
+    'comment' => array(
+      'forms' => array('comment_form'),
+    ),
+  );
+  // @todo Can we get away with just base form?
+  $type_info['node']['forms'] = array('node_form');
+
+
+  // Popular contrib entities
+  $type_info['field_collection_item'] = array(
+    'forms' => array('field_collection_item_form'),
+  );
+  $enabled_types = array();
+  foreach ($type_info as $entity_type => $entity_info) {
+    if (isset($entity_infos[$entity_type])) {
+      $enabled_types[$entity_type] = $type_info[$entity_type];
+    }
+  }
+  return $enabled_types;
+}
+
+/**
+ * Retrieves settings for a particular form.
+ * @param $form_state
+ */
+function _entity_rules_get_form_entity_type_settings($form_state) {
+  $form_id = $form_state['build_info']['form_id'];
+  if (!empty($form_state['build_info']['base_form_id'])) {
+    $base_form_id = $form_state['build_info']['base_form_id'];
+  }
+  $type_settings = _entity_rules_get_type_settings();
+  foreach ($type_settings as $entity_type => $settings) {
+    if (is_array($settings['forms'])) {
+      if (in_array($form_id, $settings['forms']) || (isset($base_form_id) && in_array($base_form_id, $settings['forms']))) {
+        return array_merge(array('entity_type' => $entity_type), $settings['form_settings']);
+      }
+
+    }
+  }
+  return FALSE;
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function entity_rules_form_alter(&$form, &$form_state, $form_id) {
+
+  if (!empty($form['#entity_type']) && !empty($form['#bundle'])) {
+    //$entity_type = $form['#entity_type'];
+    $bundle_name = $form['#bundle'];
+    $entity_type = NULL;
+    if ($form_settings = _entity_rules_get_form_entity_type_settings($form_state)) {
+      if ($rule_settings = entity_rules_load_settings_for_op($form_settings['entity_type'], $bundle_name, 'form_access')) {
+        // This bundle has 'form access' Rules.
+        $entity_type = $form_settings['entity_type'];
+        if (isset($form['#' . $entity_type]) || isset($form['#entity'])) {
+          $entity = isset($form['#' . $entity_type]) ? $form['#' . $entity_type] : $form['#entity'];
+          $results = _entity_rules_invoke_rules($entity, $entity_type, 'form_access');
+          if (!_entity_rules_all_pass($results)) {
+            $form['#access'] = FALSE;
+          }
+        }
+      }
+      if ($rule_settings = entity_rules_load_settings_for_op($form_settings['entity_type'], $bundle_name, 'validation')) {
+        // @todo For now always attach validate to form
+        $form['#validate'][] = 'entity_rules_entity_form_validation';
+        /* if (isset($form['actions']['#type']) && $form['actions']['#type'] == 'actions') {
+         // Modules can exclude certain ops from validation(delete for example).
+         foreach (element_children($form['actions']) as $op) {
+         if (empty($form_settings['exclude_validation_ops']) || !in_array($op,$form_settings['exclude_validation_ops'])) {
+         $form['actions'][$op]['#validate'][] = 'entity_rules_entity_form_validation';
+         }
+         }
+         }
+         else {
+         $form['#validate'][] = 'entity_rules_entity_form_validation';
+         } */
+      }
+    }
+  }
+}
+
+/**
+ * Validation callback for forms to be validated via Rules.
+ * @param $form
+ * @param $form_state
+ */
+function entity_rules_entity_form_validation(&$form, &$form_state) {
+  $entity_type = $form['#entity_type'];
+  // If possible rely on Entity API to build entity
+  if ($ui_controller = entity_ui_controller($entity_type)) {
+    $entity = $ui_controller->entityFormSubmitBuildEntity($form, $form_state);
+  }
+  else {
+    // Build the entity ourselves
+    // @todo How to deal with entities don't support bundles
+    $bundle = $form['#bundle'];
+    $entity = entity_rules_build_form_entity($form, $form_state, $entity_type, $bundle);
+  }
+  $results = _entity_rules_invoke_rules($entity, $entity_type, 'validation');
+  if (!_entity_rules_all_pass($results)) {
+    form_error($form['actions']);
+  }
+}
+
+/**
+ * Builds entity from form_state/
+ *
+ * @todo This doesn't work with creating Users
+ * @return
+ *   The updated entity.
+ *
+ * @see entity_ui_form_submit_build_entity()
+ */
+function entity_rules_build_form_entity($form, $form_state, $entity_type, $bundle) {
+  // Add the bundle property to the entity if the entity type supports bundles
+  // and the form provides a value for the bundle key. Especially new entities
+  // need to have their bundle property pre-populated before we invoke
+  // entity_form_submit_build_entity().
+  if (!empty($bundle) && isset($form_state['values'][$bundle])) {
+    $form_state[$entity_type]->{$bundle} = $form_state['values'][$bundle];
+  }
+  entity_form_submit_build_entity($entity_type, $form_state[$entity_type], $form, $form_state);
+  return $form_state[$entity_type];
+}
+
+/**
+ * Determines if Rules invoked by entityform_invoke_rules passes.
+ *
+ * @param array $rule_returns
+ * @return boolean
+ */
+function _entity_rules_all_pass($rule_returns) {
+  $pass = FALSE;
+  if (empty($rule_returns)) {
+    // No Returns so pass
+    return TRUE;
+  }
+  foreach ($rule_returns as $rule_return) {
+    // Components that subclass RulesConditionContainer will return a boolean.
+    if ($rule_return === FALSE) {
+      //First Rule that didn't pass
+      return FALSE;
+    }
+    // Components that subclass RulesActionContainer will array of "Provided" vars
+    if (is_array($rule_return)) {
+      //This is not a Condition Component
+      //The first value should be a returned "Truth Value"
+      if (isset($rule_return[0]) && $rule_return[0] == FALSE) {
+        //First Rule that didn't pass
+        return FALSE;
+      }
+    }
+  }
+  //All Rules passed
+  return TRUE;
+}
+
+/**
+ * Implements hook_forms().
+ */
+function entity_rules_forms() {
+  // Make a different form id to each Rule Add form
+  // @todo Should there be 1 for editing Rules???
+  $forms["entity_rules_add_rule_form"] = array(
+    'callback' => 'rules_admin_add_component',
+  );
+  $forms["entity_rules_form_edit_rules_config"] = array(
+    'callback' => 'rules_ui_form_edit_rules_config',
+  );
+  $forms["entity_rules_form_clone_rules_config"] = array(
+    'callback' => 'rules_ui_form_clone_rules_config',
+  );
+  return $forms;
+}
+
+/**
+ * Gets rule component types for an operation.
+ * @param $op
+ * @return array
+ */
+function _entity_rules_get_component_types_for_op($op) {
+  $events = module_invoke_all('entity_rules_event_info');
+  return $events[$op]['component_types'];
+}
+
+/**
+ * Utility Function to alter the add Rules component form.
+ *
+ * This function is restrict the plugin type
+ * and to add basic Variables
+ */
+function _entity_rules_add_rules_component_alter(&$form, $op, $is_conditional) {
+  $component_types = _entity_rules_get_component_types_for_op($op);
+  if ($component_types && !empty($form['plugin_name']['#options'])) {
+    foreach ($form['plugin_name']['#options'] as $key => $value) {
+      if (!in_array($key, $component_types)) {
+        unset($form['plugin_name']['#options'][$key]);
+      }
+    }
+  }
+  if (isset($form['settings']) && empty($form['#entity_rules_altered'])) {
+    $form['#entity_rules_altered'] = TRUE;
+    $form['settings']['tags'] = array(
+      '#type' => 'value',
+      '#value' => "entity_rules_$op",
+    );
+    $default_var_items[] = array(
+      'type' => 'entity',
+      'label' => 'Entity',
+      'name' => 'entity',
+      'usage' => '10',
+      // Parameter var. Why is this not defined as constant in Rules
+      'weight' => 0,
+    );
+    $var_items = array_merge($default_var_items, _entity_rules_get_var_items($op, $is_conditional));
+    $entity_types = entity_get_info();
+    $item_keys = array();
+    // Loop through all the variables to alter the row on the form.
+    foreach ($var_items as $var_num => $var_item) {
+      if (!isset($form['settings']['vars']['items'][$var_item['name']])) {
+        $item_key = $var_num;
+      }
+      else {
+        $item_key = $var_item['name'];
+      }
+      $item_keys[] = $item_key;
+      if (isset($var_item['description'])) {
+        $form['settings']['vars']['items'][$item_key]['type']['#description'] = $var_item['description'];
+      }
+
+      foreach ($var_item as $prop => $value) {
+        if ($prop == 'entity_rules_settings') {
+          continue;
+        }
+        if ($prop == 'weight' || $prop == 'usage' || empty($form['settings']['vars']['items'][$item_key][$prop]['#default_value'])) {
+          $form['settings']['vars']['items'][$item_key][$prop]['#default_value'] = $value;
+        }
+        $form['settings']['vars']['items'][$item_key][$prop]['#disabled'] = TRUE;
+      }
+      if ($var_item['type'] == 'entity') {
+        $entity_types = entity_get_info();
+        $entity_options['entity'] = t('Any Entity');
+        foreach ($entity_types as $entity_type => $info) {
+          if ($info['fieldable']) {
+            // Make sure this entity type supports the current operation
+            if (in_array($op, array_keys(_entity_rules_get_rule_types($entity_type)))) {
+              $entity_options[$entity_type] = $info['label'];
+            }
+          }
+        }
+        // If this rule_config is only available for 1 entity type remove "any"
+        if (count($entity_options) == 2) {
+          unset($entity_options['entity']);
+        }
+        $form['settings']['vars']['items'][$item_key]['type']['#disabled'] = FALSE;
+        $form['settings']['vars']['items'][$item_key]['type']['#options'] = $entity_options;
+        $form['settings']['vars']['items'][$item_key]['type']['#description'] = t('Choose which entity type this Rule should be availabe for.');
+      }
+    }
+    // Remove all Var types except those that can be enter via textfield
+    $text_field_var_types = array(
+      'date',
+      'integer',
+      'decimal',
+      'boolean',
+      'text'
+    );
+    foreach ($form['settings']['vars']['items'] as $item_key => &$var_item) {
+      if (!in_array($item_key, $item_keys, TRUE)) {
+        $var_item['type']['#description'] = t('If set this variable will availalbe to set per bundle to pass to this Rule.');
+        foreach ($var_item['type']['#options'] as $type => $value) {
+          if (!in_array($type, $text_field_var_types)) {
+            unset($var_item['type']['#options'][$type]);
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * This form is defined in entity_rules_forms.
+ * It alters the Rules add form.
+ */
+function entity_rules_form_entity_rules_add_rule_form_alter(&$form, $form_state, $form_id) {
+  $op = arg(4);
+  $is_conditional = in_array($form['plugin_name']['#default_value'], array(
+    'and',
+    'or'
+  ));
+  _entity_rules_add_rules_component_alter($form, $op, $is_conditional);
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * This form is defined in entity_rules_forms.
+ * It alters the Rules Component edit form.
+ */
+function entity_rules_form_entity_rules_form_edit_rules_config_alter(&$form, $form_state, $form_id) {
+  $op = arg(4);
+  $rule = $form_state['rules_element'];
+  $is_conditional = is_subclass_of($rule, 'RulesConditionContainer');
+  _entity_rules_add_rules_component_alter($form, $op, $is_conditional);
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * This form is defined in entity_rules_forms.
+ * It alters the Rules Component edit form.
+ */
+function entity_rules_form_entity_rules_form_clone_rules_config_alter(&$form, $form_state, $form_id) {
+  $op = arg(4);
+  $rule = $form_state['rules_element'];
+  $is_conditional = is_subclass_of($rule, 'RulesConditionContainer');
+  _entity_rules_add_rules_component_alter($form, $op, $is_conditional);
+}
+
+/**
+ * Gets extra variables for a Rule Component operation.
+ *
+ * @param $op
+ *   Entity Rules operation
+ * @param $is_conditional
+ *   Whether the Rule is a conditional component
+ * @return array
+ *   The extra varialbes not including the 'entity' variables.
+ */
+function _entity_rules_get_var_items($op, $is_conditional) {
+  $var_items = array();
+  $events = module_invoke_all('entity_rules_event_info');
+  if (!empty($events[$op]['vars'])) {
+    $var_items += $events[$op]['vars'];
+  }
+  if ($is_conditional && !empty($events[$op]['conditional vars'])) {
+    $var_items += $events[$op]['conditional vars'];
+  }
+  return $var_items;
+  switch ($op) {
+    case 'create':
+    case 'update':
+    case 'delete':
+      $var_items[] = array(
+        'type' => 'boolean',
+        'label' => 'Continue Rules',
+        'name' => 'continue',
+        'usage' => '11',
+        // Parameter var. Why is this not defined as constant in Rules
+        'weight' => 1,
+        'description' => t('If set to FALSE no rules after the current will be invoked.'),
+        'entity_rules_settings' => array('default_value' => TRUE),
+      );
+      break;
+    case 'validation':
+      if (!$is_conditional) {
+        $var_items[] = array(
+          'type' => 'boolean',
+          'label' => 'Entity Validates',
+          'name' => 'entity_is_validate',
+          'usage' => '11',
+          // Parameter var. Why is this not defined as constant in Rules
+          'weight' => 1,
+          'description' => t('If set to FALSE the entity fails validation.'),
+          'entity_rules_settings' => array('default_value' => TRUE),
+        );
+      }
+      break;
+    case 'form_access':
+      if (!$is_conditional) {
+        $var_items[] = array(
+          'type' => 'boolean',
+          'label' => 'Entity Form Access',
+          'name' => 'entity_form_acccess',
+          'usage' => '11',
+          // Parameter var. Why is this not defined as constant in Rules
+          'weight' => 1,
+          'description' => t('If set to FALSE then form will not be shown to the user.'),
+          'entity_rules_settings' => array('default_value' => TRUE),
+        );
+      }
+      break;
+  }
+
+  return $var_items;
+}
+
+/**
+ * Utitility function to get the bundle name as a string.
+ *
+ * This is need because different modules handle bundles differently in menu paths.
+ * @param $entity_type
+ * @param $bundle
+ *   Object or string.
+ * @return string
+ *   Bundle name
+ */
+function _entity_rules_get_bundle_name($entity_type, $bundle) {
+  if (is_object($bundle)) {
+    $entity_info = entity_get_info($entity_type);
+    return $bundle->{$entity_info['bundle keys']['bundle']};
+  }
+  else {
+    return $bundle;
+  }
+}
+
+/**
+ * Implements hook_entity_delete().
+ */
+function entity_rules_entity_delete($entity, $type) {
+  _entity_rules_invoke_rules($entity, $type, 'delete');
+}
+
+/**
+ * Implements hook_entity_insert().
+ */
+function entity_rules_entity_insert($entity, $type) {
+  _entity_rules_invoke_rules($entity, $type, 'create');
+}
+
+/**
+ * Implements hook_entity_update().
+ */
+function entity_rules_entity_update($entity, $type) {
+  _entity_rules_invoke_rules($entity, $type, 'update');
+}
+
+/**
+ * Invokes Rules for an entity given an operation.
+ * @param $entity
+ * @param $entity_type
+ * @param $op
+ * @return
+ *   Array for values returned from invoked Rules
+ */
+function _entity_rules_invoke_rules($entity, $entity_type, $op) {
+  $return_values = array();
+  $ids = entity_extract_ids($entity_type, $entity);
+  $bundle = array_pop($ids);
+  $rule_settings = entity_rules_load_settings_for_op($entity_type, $bundle, $op, TRUE);
+  foreach ($rule_settings as $id => $invoke_settings) {
+    // Only invoke if Rules exists.
+    // rules_invoke_component will always return false if the Rule doesn't exist.
+    $rule_name = $invoke_settings->loaded_rules_config->name;
+    if (rules_get_cache('comp_' . $rule_name)) {
+      $entity_wrapper = entity_metadata_wrapper($entity_type, $entity);
+      $args = array($entity_wrapper);
+      $conditional = is_subclass_of($invoke_settings->loaded_rules_config, 'RulesConditionContainer');
+      $default_rule_args = _entity_rules_get_var_items($op, $conditional);
+      foreach ($default_rule_args as $default_rule_arg) {
+        $args[] = $default_rule_arg['entity_rules_settings']['default_value'];
+      }
+      $vars = _entity_rules_get_extra_vars($invoke_settings->loaded_rules_config, $op);
+
+      foreach ($vars as $var_name => $var_info) {
+        if (isset($invoke_settings->args[$var_name])) {
+          $args[] = $invoke_settings->args[$var_name];
+        }
+        else {
+          $args[] = NULL;
+        }
+      }
+      $return_value = entity_rules_invoke_component($rule_name, $args);
+      // For condition componenents display message on FALSE
+      if (is_subclass_of($invoke_settings->loaded_rules_config, 'RulesConditionContainer')) {
+        if ($return_value === FALSE && !empty($invoke_settings->false_msg['value'])) {
+          _entity_rules_show_message($invoke_settings->false_msg, $entity, $entity_type);
+        }
+      }
+      $return_values[] = $return_value;
+      // Abort at first Rule that doesn't pass or sets continue FALSE
+      if ($return_value === FALSE || (is_array($return_value) && isset($return_value[0]) && $return_value[0] == FALSE)) {
+        break;
+      }
+    }
+    else {
+      // Warn that Rule doesn't exist
+      $msg = t('Entityform Type %form references non-existing Rule component %component',
+        array('%form' => $entityform->type, '%component' => $rule_name));
+      watchdog('entityform', $msg);
+      if (user_access('administer entityform types')) {
+        // Warn on screen if user can fix this.
+        drupal_set_message($msg, 'warning');
+      }
+    }
+  }
+  return $return_values;
+}
+
+/**
+ * Displays message with tokens replaced
+ * @param $text_value
+ *   Text value to be shown either format or plain string
+ * @param $entity
+ *   Entity related to event
+ * @param $entity_type
+ * @param $message_type
+ *   drupal_set_message type
+ */
+function _entity_rules_show_message($text_value, $entity, $entity_type, $message_type = 'warning') {
+  $is_filtered = FALSE;
+  if (is_array($text_value)) {
+    // We are dealing for a filtered text value
+    $text = $text_value['value'];
+    $format = $text_value['format'];
+    $is_filtered = TRUE;
+  }
+  else {
+    $text = check_plain($text_value);
+  }
+  if ($text == '<none>') {
+    return '';
+  }
+  $token_types[] = 'global';
+  $token_types[$entity_type] = $entity;
+  $text = token_replace($text, $token_types);
+  if ($is_filtered) {
+    $text = check_markup($text, $format);
+  }
+  if ($text) {
+    drupal_set_message($text, $message_type);
+  }
+}
+
+/**
+ * Invokes a rule component, for example a rule set.
+ *
+ * @param $component_name
+ *   The component's name.
+ * @param $args
+ *   Pass further parameters as required for the invoked component.
+ *
+ * @return
+ *   An array of variables as provided by the component, or FALSE in case the
+ *   component could not be executed.
+ */
+function entity_rules_invoke_component($name, &$args) {
+  if ($component = rules_get_cache('comp_' . $name)) {
+    return $component->executeByArgs($args);
+  }
+  return FALSE;
+}
+
+/**
+ * Gets extra variables for a Rule.
+ * @param $rule
+ *   Rule Object
+ * @param $op
+ * @return
+ *   An array of variables.
+ * @see _entity_rules_get_var_items()
+ */
+function _entity_rules_get_extra_vars($rule, $op) {
+  $vars = $rule->componentVariables();
+  unset($vars['entity']);
+  $is_conditional = is_subclass_of($rule, 'RulesConditionContainer');
+  $default_var_items = _entity_rules_get_var_items($op, $is_conditional);
+  foreach ($default_var_items as $default_var) {
+    unset($vars[$default_var['name']]);
+  }
+  return $vars;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function entity_rules_theme() {
+  return array(
+    // Theme function for the 'sortable' rules.
+    'entity_rules_bundle_rules_form' => array(
+      'render element' => 'form',
+      'file' => 'entity_rules.admin.inc',
+    ),
+  );
+}
+
+/**
+ * Get Entity Rules Settings entities for entity type, bundle, op combo
+ *
+ * @param $entity_type
+ * @param $bundle
+ * @param $op
+ * @param bool $load_rules
+ * @return array
+ */
+function entity_rules_load_settings_for_op($entity_type, $bundle, $op, $load_rules = FALSE) {
+  $enabled_types = variable_get('entity_rules_types', explode(',' , ENTITY_RULES_DEFAULT_TYPES));
+  if (array_search($entity_type, $enabled_types, TRUE) === FALSE) {
+    return array();
+  }
+  $conditions = array(
+    'entity_type' => $entity_type,
+    'bundle' => $bundle,
+    'op' => $op,
+  );
+  $entities = entity_load('entity_rule_setting', FALSE, $conditions);
+  if ($load_rules) {
+    foreach (array_keys($entities) as $entity_id) {
+      $entities[$entity_id]->loaded_rules_config = rules_config_load($entities[$entity_id]->rules_config);
+      // If rule didn't load unset this entity
+      if (empty($entities[$entity_id]->loaded_rules_config)) {
+        unset($entities[$entity_id]);
+      }
+    }
+  }
+  return $entities;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function entity_rules_permission() {
+  $return = array();
+  $permissions = variable_get('entity_rules_permissions', ENTITY_RULES_DEFAULT_PERMISSIONS);
+  $enabled_types = variable_get('entity_rules_types', explode(',' , ENTITY_RULES_DEFAULT_TYPES));
+  switch ($permissions) {
+    case 'single':
+      $return = array(
+        'administer entity_rules settings' => array(
+          'title' => t('Administer Entity Rules'),
+        ),
+      );
+      break;
+    case 'entity_type':
+      $entity_infos = entity_get_info();
+      $entity_infos = array_intersect_key($entity_infos, array_flip($enabled_types));
+      foreach ($entity_infos as $entity_type => $info) {
+        if ($info['fieldable']) {
+          $return["administer $entity_type entity_rules settings"] = array(
+            'title' => t('%entity_type Administer Entity Rules',
+              array('%entity_type' => $info['label'])),
+          );
+        }
+      }
+      break;
+  }
+
+  return $return;
+}

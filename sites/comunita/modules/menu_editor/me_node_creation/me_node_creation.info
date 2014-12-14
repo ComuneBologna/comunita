@@ -1,0 +1,14 @@
+name = Menu Editor - Node creation
+description = Menu item placeholders for node creation.
+package = Menu
+core = 7.x
+dependencies[] = menu_editor
+; xautoload for the crumbs plugin
+dependencies[] = xautoload
+
+; Information added by drupal.org packaging script on 2013-05-21
+version = "7.x-1.0-beta3"
+core = "7.x"
+project = "menu_editor"
+datestamp = "1369137617"
+

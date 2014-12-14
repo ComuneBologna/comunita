@@ -1,0 +1,99 @@
+@import "compass/css3";
+
+// Defaults
+.expanding-formatter {
+  overflow: hidden;
+  position: relative;
+
+  &.expanded .expanding-formatter-ellipsis {
+    display: none;
+  }
+
+  // Inline summary/expanded content.
+  &[data-inline="1"] {
+    p {
+      margin: 0 0 1.2em;
+    }
+    p:nth-child(2) {
+      margin-top: 1.2em;
+    }
+    p:first-child,
+    p:last-child {
+      display: inline;
+      margin-bottom: 0;
+    }
+    .expanding-formatter-summary,
+    .expanding-formatter-content {
+      display: inline;
+    }
+    .expanding-formatter-trigger {
+      display: inline-block;
+      margin-bottom: 5px;
+    }
+  }
+
+  // Margin for ellipsis.
+  .expanding-formatter-ellipsis {
+    margin-right: .25em;
+  }
+
+  // CSS3 Enabled
+  &[data-css3="1"] {
+    // Collapsed
+    &.collapsed {
+      &.sliding .expanding-formatter-ellipsis,
+      &[data-effect="slide"]:not(.sliding) .expanding-formatter-content {
+        display: none;
+      }
+      .trigger {
+        display: inline;
+      }
+    }
+    // Slide effect
+    &[data-effect="slide"] {
+      @include transition(height 500ms ease);
+    }
+    // Fade effect
+    &[data-effect="fade"] {
+      .expanding-formatter-content {
+        @include transition(opacity 500ms ease);
+        @include opacity(0);
+        overflow: hidden;
+      }
+      .expanding-formatter-trigger {
+        @include transition(opacity 500ms ease);
+        @include opacity(0);
+      }
+      &.fading .expanding-formatter-trigger {
+        @include transition(none);
+      }
+      &.collapsed {
+        .expanding-formatter-content {
+          clip: rect(1px 1px 1px 1px);
+          clip: rect(1px, 1px, 1px, 1px);
+          height: 1px;
+          overflow: hidden;
+          position: absolute !important;
+          width: 1px;
+        }
+        .expanding-formatter-trigger {
+          @include opacity(1);
+        }
+        &.fading .expanding-formatter-content,
+        &.fading .expanding-formatter-trigger {
+          @include opacity(0);
+        }
+      }
+      &.expanded {
+        .expanding-formatter-content,
+        .expanding-formatter-trigger {
+          @include opacity(1);
+        }
+        &.fading .expanding-formatter-content,
+        &.fading .expanding-formatter-trigger {
+          @include opacity(0);
+        }
+      }
+    }
+  }
+}
